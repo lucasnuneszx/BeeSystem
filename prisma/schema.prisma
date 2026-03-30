@@ -1,0 +1,83 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Usuario {
+  id        String   @id @default(uuid())
+  nome      String
+  email     String   @unique
+  cpf       String   @unique
+  perfil    String
+  status    String   @default("ATIVO")
+  criadoEm  DateTime @default(now())
+  pedidos   Pedido[]
+}
+
+model Produto {
+  id          String   @id @default(uuid())
+  nome        String
+  sku         String   @unique
+  categoria   String
+  estoqueMin  Int      @default(10)
+  itensPedido ItemPedido[]
+  lotes       LoteEstoque[]
+}
+
+model Fornecedor {
+  id        String   @id @default(uuid())
+  nome      String
+  cnpj      String   @unique
+  email     String
+  lotes     LoteEstoque[]
+}
+
+model LoteEstoque {
+  id            String   @id @default(uuid())
+  numeroLote    String   @unique
+  quantidade    Int
+  validade      DateTime
+  localizacao   String
+  produtoId     String
+  fornecedorId  String
+  produto       Produto    @relation(fields: [produtoId], references: [id])
+  fornecedor    Fornecedor @relation(fields: [fornecedorId], references: [id])
+  criadoEm      DateTime @default(now())
+}
+
+model Pedido {
+  id            String   @id @default(uuid())
+  codigo        String   @unique
+  cliente       String
+  status        String
+  justificativa String?
+  vendedorId    String
+  vendedor      Usuario    @relation(fields: [vendedorId], references: [id])
+  itens         ItemPedido[]
+  criadoEm      DateTime @default(now())
+  atualizadoEm  DateTime @updatedAt
+}
+
+model ItemPedido {
+  id         String   @id @default(uuid())
+  pedidoId   String
+  produtoId  String
+  quantidade Int
+  preco      Float
+  pedido     Pedido  @relation(fields: [pedidoId], references: [id])
+  produto    Produto @relation(fields: [produtoId], references: [id])
+}
+
+model LogAuditoria {
+  id         String   @id @default(uuid())
+  usuarioId  String
+  acao       String
+  modulo     String
+  detalhes   String
+  ip         String?
+  criadoEm   DateTime @default(now())
+}
