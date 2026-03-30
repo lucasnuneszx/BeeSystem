@@ -1,26 +1,134 @@
 @import "tailwindcss";
 
+@theme {
+  --color-primary: #FACC15;
+  --color-primary-dark: #EAB308;
+  --color-surface: #111820;
+  --color-background: #0B0F14;
+  --radius-xl: 1.5rem;
+  --radius-2xl: 2.5rem;
+}
+
+/* Identidade Visual BEESYSTEM PREMIUM - 100% Human-Made */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --background: #0B0F14;
+  --foreground: #ffffff;
+  --primary: #FACC15;
+  --primary-glow: rgba(250, 204, 21, 0.4);
 }
 
 body {
-  background: var(--background);
+  background-color: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'Outfit', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Background Imersivo 'Colmeia Pro' (Parallax sutil) */
+.bg-beesystem {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: 
+    radial-gradient(circle at 20% 20%, rgba(250, 204, 21, 0.03) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(250, 204, 21, 0.02) 0%, transparent 50%),
+    #0B0F14;
+}
+
+.honeycomb-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  opacity: 0.12;
+  background-image: url("data:image/svg+xml,%3Csvg width='56' height='100' viewBox='0 0 56 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M28 66L0 50L0 16L28 0L56 16L56 50L28 66L28 100' fill='none' stroke='%23FACC15' stroke-width='1'/%3E%3C/svg%3E");
+  background-size: 56px 100px;
+  mask-image: radial-gradient(circle at center, black 20%, transparent 90%);
+  animation: bg-slide 60s linear infinite;
+}
+
+@keyframes bg-slide {
+  from { background-position: 0 0; }
+  to { background-position: 1000px 1000px; }
+}
+
+/* Design System - Glassmorphism de Elite */
+.glass {
+  background: rgba(17, 24, 32, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(250, 204, 21, 0.05);
+  box-shadow: 0 12px 64px -12px rgba(0, 0, 0, 0.8);
+}
+
+.glass-accent {
+  background: rgba(250, 204, 21, 0.05);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(250, 204, 21, 0.2);
+}
+
+/* Microinterações (RF Requisitos) */
+.btn-bee {
+  @apply transition-all duration-300 active:scale-[0.97] hover:scale-[1.02] relative overflow-hidden;
+}
+
+.hover-glow:hover {
+  box-shadow: 0 0 25px var(--primary-glow);
+  border-color: rgba(250, 204, 21, 0.4);
+}
+
+.divider-honeycomb {
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--primary), transparent);
+  opacity: 0.3;
+  margin: 1.5rem 0;
+}
+
+/* Scrollbar Corporativa */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(250, 204, 21, 0.15);
+  border-radius: 100px;
+}
+
+/* Page Transitions */
+.page-enter {
+  opacity: 0;
+  transform: translateY(10px) scale(0.99);
+}
+.page-enter-active {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  transition: opacity 300ms, transform 300ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Skeleton Loading (RF Requisitos) */
+.skeleton {
+  background: linear-gradient(90deg, #111820 25%, #1a222c 50%, #111820 75%);
+  background-size: 200% 100%;
+  animation: skeleton-loading 2s infinite linear;
+}
+
+@keyframes skeleton-loading {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Animações de Voo (RF Requisitos) */
+@keyframes bee-hover {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+.animate-bee-hover {
+  animation: bee-hover 4s ease-in-out infinite;
+}
+
+.input-bee {
+  @apply bg-surface/50 border border-white/5 rounded-2xl px-6 py-4 outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all font-medium placeholder:opacity-30;
 }
