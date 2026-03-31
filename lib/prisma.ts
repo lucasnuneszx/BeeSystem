@@ -1,10 +1,17 @@
-// @ts-ignore - PrismaClient pode não estar disponível até que o comando 'generate' seja executado com sucesso no ambiente local.
 import { PrismaClient } from '@prisma/client';
+import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3';
+import path from 'path';
 
-// Configuração do Singleton do Prisma para Next.js (Evita múltiplas instâncias em desenvolvimento)
 const criarInstanciaPrisma = () => {
-  // @ts-ignore
-  return new PrismaClient();
+  const dbPath = path.join(process.cwd(), 'dev.db');
+  console.log('[Prisma] Inicializando com adapter BetterSQLite3:', dbPath);
+  try {
+    const adapter = new PrismaBetterSqlite3({ url: dbPath });
+    return new PrismaClient({ adapter });
+  } catch (e) {
+    console.error('[Prisma] Erro ao criar adapter/client:', e);
+    throw e;
+  }
 };
 
 declare global {
