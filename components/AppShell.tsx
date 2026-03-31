@@ -2,8 +2,8 @@
 
 import React, { useState } from 'react';
 import { usarAutenticacao } from '@/context/AuthContext';
-import { 
-  LayoutDashboard, Users, ShoppingCart, Package, 
+import {
+  LayoutDashboard, Users, ShoppingCart, Package,
   QrCode, ClipboardCheck, History, Settings,
   LogOut, Menu, X, ChevronRight, User as IconeUsuario,
   PieChart, AlertCircle, Search
@@ -22,7 +22,7 @@ interface PropriedadesItemLateral {
 
 const ItemLateral = ({ icone, rotulo, link, ativo, recolhido }: PropriedadesItemLateral) => (
   <Link href={link}>
-    <motion.div 
+    <motion.div
       whileHover={{ scale: 1.02, x: 5 }}
       whileTap={{ scale: 0.98 }}
       className={`
@@ -36,7 +36,7 @@ const ItemLateral = ({ icone, rotulo, link, ativo, recolhido }: PropriedadesItem
       </span>
       <AnimatePresence>
         {!recolhido && (
-          <motion.span 
+          <motion.span
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -10 }}
@@ -47,7 +47,7 @@ const ItemLateral = ({ icone, rotulo, link, ativo, recolhido }: PropriedadesItem
         )}
       </AnimatePresence>
       {ativo && !recolhido && (
-        <motion.div 
+        <motion.div
           layoutId="sidebar-active"
           className="ml-auto"
         >
@@ -69,35 +69,35 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const perfil = usuario.perfil;
 
   const itensMenu = [
-    { rotulo: 'Dashboard', icone: <LayoutDashboard size={20} />, link: '/dashboard', perfis: ['GERENTE', 'VENDEDOR'] },
-    
+    { rotulo: 'Dashboard', icone: <LayoutDashboard size={20} />, link: '/dashboard', perfis: ['ADMIN', 'GERENTE', 'VENDEDOR'] },
+
     // Área do Gerente
-    { rotulo: 'Gestão Usuários', icone: <Users size={20} />, link: '/admin/usuarios', perfis: ['GERENTE'] },
-    { rotulo: 'Monitoramento', icone: <PieChart size={20} />, link: '/gerencial/monitoramento', perfis: ['GERENTE'] },
-    { rotulo: 'Auditoria', icone: <History size={20} />, link: '/gerencial/auditoria', perfis: ['GERENTE'] },
-    
+    { rotulo: 'Gestão Usuários', icone: <Users size={20} />, link: '/admin/usuarios', perfis: ['ADMIN', 'GERENTE'] },
+    { rotulo: 'Monitoramento', icone: <PieChart size={20} />, link: '/gerencial/monitoramento', perfis: ['ADMIN', 'GERENTE'] },
+    { rotulo: 'Auditoria', icone: <History size={20} />, link: '/gerencial/auditoria', perfis: ['ADMIN', 'GERENTE'] },
+
     // Área do Vendedor
-    { rotulo: 'Criar Pedido', icone: <ShoppingCart size={20} />, link: '/vendas/novo-pedido', perfis: ['VENDEDOR'] },
-    { rotulo: 'Checkout / Saída', icone: <LogOut size={20} />, link: '/vendas/saida', perfis: ['VENDEDOR'] },
-    { rotulo: 'Meus Pedidos', icone: <ClipboardCheck size={20} />, link: '/vendas/historico', perfis: ['VENDEDOR'] },
-    
+    { rotulo: 'Criar Pedido', icone: <ShoppingCart size={20} />, link: '/vendas/novo-pedido', perfis: ['ADMIN', 'VENDEDOR'] },
+    { rotulo: 'Checkout / Saída', icone: <LogOut size={20} />, link: '/vendas/saida', perfis: ['ADMIN', 'VENDEDOR'] },
+    { rotulo: 'Meus Pedidos', icone: <ClipboardCheck size={20} />, link: '/vendas/historico', perfis: ['ADMIN', 'VENDEDOR'] },
+
     // Área do Galpão (Oficial)
-    { rotulo: 'Recebimento', icone: <QrCode size={20} />, link: '/galpao/recebimento', perfis: ['OFICIAL'] },
-    { rotulo: 'Mapa de Estoque', icone: <Search size={20} />, link: '/galpao/mapa-estoque', perfis: ['OFICIAL'] },
-    { rotulo: 'Disparidades', icone: <AlertCircle size={20} />, link: '/galpao/disparidade', perfis: ['OFICIAL'] },
+    { rotulo: 'Recebimento', icone: <QrCode size={20} />, link: '/galpao/recebimento', perfis: ['ADMIN', 'OFICIAL'] },
+    { rotulo: 'Mapa de Estoque', icone: <Search size={20} />, link: '/galpao/mapa-estoque', perfis: ['ADMIN', 'OFICIAL'] },
+    { rotulo: 'Disparidades', icone: <AlertCircle size={20} />, link: '/galpao/disparidade', perfis: ['ADMIN', 'OFICIAL'] },
   ].filter(item => item.perfis.includes(perfil));
 
   return (
     <div className="flex min-h-screen bg-background text-foreground overflow-hidden">
       {/* Menu Lateral Desktop */}
-      <motion.aside 
+      <motion.aside
         initial={false}
         animate={{ width: recolhido ? 80 : 280 }}
         className="hidden md:flex flex-col border-r border-border bg-background bg-honeycomb z-20 transition-all duration-500"
       >
         <div className="p-6 flex items-center justify-between">
           {!recolhido && (
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               className="flex items-center gap-3"
@@ -112,7 +112,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
         <div className="flex-1 px-4 space-y-2 py-4 custom-scrollbar overflow-y-auto">
           {itensMenu.map((item) => (
-            <ItemLateral 
+            <ItemLateral
               key={item.link}
               {...item}
               ativo={caminhoAtual === item.link}
@@ -122,7 +122,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
 
         <div className="p-4 border-t border-border mt-auto">
-          <button 
+          <button
             onClick={() => setRecolhido(!recolhido)}
             className="w-full flex items-center gap-3 p-3 text-muted-foreground hover:text-white transition-colors"
           >
@@ -136,7 +136,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <main className="flex-1 flex flex-col h-screen overflow-hidden relative">
         {/* Barra Superior */}
         <header className="h-20 border-b border-border glass px-8 flex items-center justify-between z-10 sticky top-0">
-          <button 
+          <button
             onClick={() => setMenuMovelAberto(true)}
             className="md:hidden p-2 text-muted-foreground"
           >
@@ -150,18 +150,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
 
           <div className="flex items-center gap-6">
-            {/* Seletor de Perfis para Demonstração */}
-            <div className="hidden lg:flex items-center gap-2 p-1 bg-surface rounded-full border border-border">
-               {(['GERENTE', 'VENDEDOR', 'OFICIAL'] as const).map((p) => (
-                 <button
-                  key={p}
-                  onClick={() => entrar(p)}
-                  className={`px-3 py-1 rounded-full text-[10px] font-bold transition-all uppercase ${perfil === p ? 'bg-primary text-background' : 'text-muted-foreground hover:text-white'}`}
-                 >
-                  {p}
-                 </button>
-               ))}
-            </div>
+            {/* Perfil Switcher Removido (Solicitação do Usuário - Sistema Funcional) */}
 
             <div className="flex items-center gap-4 border-l border-border pl-6">
               <div className="text-right hidden sm:block">
@@ -195,7 +184,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {/* Fundo do Menu Mobile */}
       <AnimatePresence>
         {menuMovelAberto && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -225,7 +214,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </div>
             <div className="space-y-2">
               {itensMenu.map((item) => (
-                <ItemLateral 
+                <ItemLateral
                   key={item.link}
                   {...item}
                   ativo={caminhoAtual === item.link}

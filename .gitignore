@@ -42,7 +42,8 @@ next-env.d.ts
 
 /app/generated/prisma
 
-# Other specific ignores requested by user
+# Specific ignores requested by user
 *.md
 .vscode/
 .idea/
+dev.db

@@ -17,7 +17,7 @@ export async function listarUsuarios() {
 export async function salvarUsuario(dados: any) {
   try {
     const { id, nome, email, cpf, perfil, status } = dados;
-    
+
     if (id) {
       // Atualizar
       await prisma.usuario.update({
@@ -30,7 +30,7 @@ export async function salvarUsuario(dados: any) {
         data: { nome, email, cpf, perfil, status: 'ATIVO' }
       });
     }
-    
+
     revalidatePath('/admin/usuarios');
     return { sucesso: true };
   } catch (error) {
@@ -64,5 +64,21 @@ export async function excluirUsuario(id: string) {
   } catch (error) {
     console.error('Erro ao excluir usuário:', error);
     return { sucesso: false };
+  }
+}
+
+export async function autenticarUsuario(email: string) {
+  try {
+    const usuario = await prisma.usuario.findFirst({
+      where: { email, status: 'ATIVO' }
+    });
+
+    if (usuario) {
+      return { sucesso: true, usuario };
+    }
+    return { sucesso: false, erro: 'Usuário não encontrado ou inativo.' };
+  } catch (error) {
+    console.error('Erro na autenticação:', error);
+    return { sucesso: false, erro: 'Erro técnico no servidor.' };
   }
 }
