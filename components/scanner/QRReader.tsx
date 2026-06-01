@@ -20,9 +20,18 @@ export default function QRReader({ onScanSuccess, context, isAdmin = false }: QR
     if (!isOpen) return;
 
     let scanner: any = null;
+    let active = true;
 
     const initScanner = async () => {
       const { Html5QrcodeScanner } = await import('html5-qrcode');
+      
+      if (!active) return;
+
+      const readerElem = document.getElementById("reader");
+      if (!readerElem) {
+        setTimeout(initScanner, 50);
+        return;
+      }
       
       scanner = new Html5QrcodeScanner(
         "reader",
@@ -44,6 +53,7 @@ export default function QRReader({ onScanSuccess, context, isAdmin = false }: QR
     initScanner();
 
     return () => {
+      active = false;
       if (scanner) {
         scanner.clear().catch(console.error);
       }
@@ -73,16 +83,6 @@ export default function QRReader({ onScanSuccess, context, isAdmin = false }: QR
     }
   };
 
-  const simulateDemoScan = async () => {
-    const fakeCode = 'PROD-VG-9997'; // Lote válido gerado no seed especial
-    await processQRCode(fakeCode);
-  };
-  
-  const simulateErrorScan = async () => {
-    const fakeCode = 'PROD-VG-9999-ERROR'; // Erro forçado
-    await processQRCode(fakeCode);
-  };
-
   return (
     <>
       <div className="flex gap-4">
@@ -93,30 +93,6 @@ export default function QRReader({ onScanSuccess, context, isAdmin = false }: QR
           <QrCode size={20} />
           Iniciar Leitura QR
         </button>
-
-        {isAdmin && (
-          <div className="flex flex-col gap-2 border-l border-white/10 pl-4">
-            <span className="text-[10px] text-white/50 uppercase tracking-widest">Modo Demo</span>
-            <div className="flex gap-2">
-              <button
-                onClick={simulateDemoScan}
-                disabled={loading}
-                className="flex items-center gap-2 bg-blue-600/20 text-blue-400 border border-blue-500/30 px-3 py-1.5 rounded uppercase font-bold text-xs hover:bg-blue-600/40 transition-all disabled:opacity-50"
-              >
-                {loading ? <Loader2 className="animate-spin" size={14} /> : <Play size={14} />}
-                Simular OK
-              </button>
-              <button
-                onClick={simulateErrorScan}
-                disabled={loading}
-                className="flex items-center gap-2 bg-red-600/20 text-red-400 border border-red-500/30 px-3 py-1.5 rounded uppercase font-bold text-xs hover:bg-red-600/40 transition-all disabled:opacity-50"
-              >
-                {loading ? <Loader2 className="animate-spin" size={14} /> : <X size={14} />}
-                Simular ERRO
-              </button>
-            </div>
-          </div>
-        )}
       </div>
 
       {isOpen && (

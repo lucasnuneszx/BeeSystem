@@ -35,12 +35,15 @@ export default function NovoPedidoPage() {
     setSubmitting(true);
     try {
       const res = await criarPedido({
-        clienteId: clienteSelecionado,
-        itens: itens
+        customerId: clienteSelecionado,
+        items: itens.map(item => ({
+          productId: item.produtoId,
+          quantity: item.quantidade
+        }))
       });
       if (res.sucesso) {
         notificar('Pedido criado com sucesso!', 'sucesso');
-        router.push('/vendas');
+        router.push('/vendas/historico');
       } else {
         notificar(res.erro || 'Erro ao criar pedido', 'erro');
       }

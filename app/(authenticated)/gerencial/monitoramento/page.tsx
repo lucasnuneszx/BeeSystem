@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   BarChart3, CheckCircle2, XCircle, 
-  Search, Eye, AlertCircle, X, Database
+  Search, Eye, AlertCircle, X, Database, ChevronLeft, ChevronRight, Loader2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usarNotificacao } from '@/context/NotificacaoContext';
@@ -14,16 +14,24 @@ const pedidosMockados = [
   { id: '1', codigo: 'PED-1024', cliente: 'Supermercado Elite LTDA', status: 'PENDENTE', vendedor: { nome: 'Ana Maria' }, criadoEm: new Date(), itens: [{ preco: 15.0, quantidade: 100 }] },
   { id: '2', codigo: 'PED-1025', cliente: 'Padaria Central', status: 'APROVADO', vendedor: { nome: 'Lucas Oliveira' }, criadoEm: new Date(), itens: [{ preco: 12.0, quantidade: 50 }] },
   { id: '3', codigo: 'PED-1026', cliente: 'Mercado do Bairro', status: 'REJEITADO', vendedor: { nome: 'Beatriz Silva' }, criadoEm: new Date(), itens: [{ preco: 18.0, quantidade: 20 }] },
+  { id: '4', codigo: 'PED-1027', cliente: 'Apicultura Central', status: 'PENDENTE', vendedor: { nome: 'Lucas Oliveira' }, criadoEm: new Date(), itens: [{ preco: 25.0, quantidade: 40 }] },
+  { id: '5', codigo: 'PED-1028', cliente: 'Gourmet Mel Co.', status: 'APROVADO', vendedor: { nome: 'Beatriz Silva' }, criadoEm: new Date(), itens: [{ preco: 30.0, quantidade: 80 }] },
+  { id: '6', codigo: 'PED-1029', cliente: 'Distribuidora Norte', status: 'PENDENTE', vendedor: { nome: 'Ana Maria' }, criadoEm: new Date(), itens: [{ preco: 14.0, quantidade: 120 }] },
+  { id: '7', codigo: 'PED-1030', cliente: 'Empório do Parque', status: 'RECEBIDO', vendedor: { nome: 'Lucas Oliveira' }, criadoEm: new Date(), itens: [{ preco: 22.0, quantidade: 35 }] },
+  { id: '8', codigo: 'PED-1031', cliente: 'Néctar Divino', status: 'APROVADO', vendedor: { nome: 'Beatriz Silva' }, criadoEm: new Date(), itens: [{ preco: 19.5, quantidade: 110 }] },
+  { id: '9', codigo: 'PED-1032', cliente: 'Mel & Cia', status: 'REJEITADO', vendedor: { nome: 'Ana Maria' }, criadoEm: new Date(), itens: [{ preco: 17.0, quantidade: 15 }] }
 ];
 
 export default function PaginaMonitoramentoGerencial() {
   const { notificar } = usarNotificacao();
-  const [carregando, setCarregando] = useState(false);
+  const [carregando, setCarregando] = useState(true);
   const [pedidos, setPedidos] = useState(pedidosMockados);
   const [pedidoSelecionado, setPedidoSelecionado] = useState<any>(null);
   const [mostrarModalRejeicao, setMostrarModalRejeicao] = useState(false);
   const [termoBusca, setTermoBusca] = useState('');
   const [justificativa, setJustificativa] = useState('');
+  const [paginaAtual, setPaginaAtual] = useState(1);
+  const itensPorPagina = 5;
 
   const carregarDados = async () => {
     setCarregando(true);
@@ -31,9 +39,12 @@ export default function PaginaMonitoramentoGerencial() {
       const lista = await listarPedidos();
       if (lista && lista.length > 0) {
         setPedidos(lista);
+      } else {
+        setPedidos(pedidosMockados);
       }
     } catch (e) {
       console.warn('Operando em modo de contingência visual.');
+      setPedidos(pedidosMockados);
     } finally {
       setCarregando(false);
     }
@@ -128,62 +139,103 @@ export default function PaginaMonitoramentoGerencial() {
             type="text" 
             placeholder="Buscar por Código ou Cliente..."
             value={termoBusca}
-            onChange={(e) => setTermoBusca(e.target.value)}
+            onChange={(e) => {
+              setTermoBusca(e.target.value);
+              setPaginaAtual(1);
+            }}
             className="w-full bg-surface border border-white/5 rounded-xl pl-12 pr-4 py-4 outline-none focus:border-primary/50 transition-all font-medium shadow-inner"
           />
       </div>
 
       <div className="glass rounded-[3rem] overflow-hidden shadow-2xl border border-white/5">
          <div className="overflow-x-auto custom-scrollbar">
-          <table className="w-full text-left">
-              <thead>
-                <tr className="bg-surface/50 border-b border-white/5">
-                    <th className="px-8 py-6 text-xs font-black uppercase tracking-widest opacity-40">Pedido Código</th>
-                    <th className="px-8 py-6 text-xs font-black uppercase tracking-widest opacity-40">Cliente</th>
-                    <th className="px-8 py-6 text-xs font-black uppercase tracking-widest opacity-40">Responsável</th>
-                    <th className="px-8 py-6 text-xs font-black uppercase tracking-widest opacity-40">Total</th>
-                    <th className="px-8 py-6 text-xs font-black uppercase tracking-widest opacity-40">Estado Banco</th>
-                    <th className="px-8 py-6 text-xs font-black uppercase tracking-widest opacity-40 text-right">Ações</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/[0.03]">
-                {carregando && pedidos.length === 0 ? (
-                   Array.from({ length: 5 }).map((_, i) => <tr key={i}><td colSpan={6} className="px-8 py-8"><div className="h-10 skeleton w-full rounded-xl" /></td></tr>)
-                ) : pedidosFiltrados.length === 0 ? (
-                  <tr><td colSpan={6} className="px-8 py-20 text-center opacity-30 italic">Nenhum registro de pedido encontrado.</td></tr>
-                ) : pedidosFiltrados.map((pedido) => (
-                  <tr key={pedido.id} className="hover:bg-white/[0.02] transition-colors group">
-                      <td className="px-8 py-8 font-black italic text-primary text-xl tracking-tighter leading-none">{pedido.codigo}</td>
-                      <td className="px-8 py-8 font-bold text-lg leading-tight">{pedido.cliente}</td>
-                      <td className="px-8 py-8 text-sm italic opacity-60 font-medium">{pedido.vendedor?.nome || 'Operador Central'}</td>
-                      <td className="px-8 py-8 font-mono text-sm leading-none tabular-nums">R$ {pedido.itens?.reduce((acc: number, item: any) => acc + (item.preco * item.quantidade), 0).toFixed(2) || '0.00'}</td>
-                      <td className="px-8 py-8">
-                        <span className={`text-[10px] font-black px-3 py-1 rounded-full border uppercase tracking-widest shadow-xl ${
-                          pedido.status === 'APROVADO' ? 'bg-green-500/10 text-green-400 border-green-500/20' :
-                          pedido.status === 'PENDENTE' ? 'bg-primary/10 text-primary border-primary/20 animate-pulse' :
-                          'bg-red-500/10 text-red-500 border-red-500/20'
-                        }`}>
-                            {pedido.status}
-                        </span>
-                      </td>
-                      <td className="px-8 py-8 text-right">
-                        {pedido.status === 'PENDENTE' ? (
-                          <div className="flex items-center justify-end gap-2">
-                              <button onClick={() => handleAprovar(pedido.id)} className="p-3 glass rounded-xl hover:text-green-400 transition-all shadow-xl hover:scale-110">
-                                <CheckCircle2 size={16} />
+           {carregando && pedidos.length === 0 ? (
+             <div className="flex justify-center items-center py-24">
+               <Loader2 className="w-10 h-10 text-primary animate-spin" />
+             </div>
+           ) : (
+             <>
+              <table className="w-full text-left">
+                  <thead>
+                    <tr className="bg-surface/50 border-b border-white/5">
+                        <th className="px-8 py-6 text-xs font-black uppercase tracking-widest opacity-40">Pedido Código</th>
+                        <th className="px-8 py-6 text-xs font-black uppercase tracking-widest opacity-40">Cliente</th>
+                        <th className="px-8 py-6 text-xs font-black uppercase tracking-widest opacity-40">Responsável</th>
+                        <th className="px-8 py-6 text-xs font-black uppercase tracking-widest opacity-40">Total</th>
+                        <th className="px-8 py-6 text-xs font-black uppercase tracking-widest opacity-40">Estado Banco</th>
+                        <th className="px-8 py-6 text-xs font-black uppercase tracking-widest opacity-40 text-right">Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/[0.03]">
+                    {pedidosFiltrados.length === 0 ? (
+                      <tr><td colSpan={6} className="px-8 py-20 text-center opacity-30 italic">Nenhum registro de pedido encontrado.</td></tr>
+                    ) : pedidosFiltrados.slice((paginaAtual - 1) * itensPorPagina, paginaAtual * itensPorPagina).map((pedido) => (
+                      <tr key={pedido.id} className="hover:bg-white/[0.02] transition-colors group">
+                          <td className="px-8 py-8 font-black italic text-primary text-xl tracking-tighter leading-none">{pedido.codigo}</td>
+                          <td className="px-8 py-8 font-bold text-lg leading-tight">{pedido.cliente}</td>
+                          <td className="px-8 py-8 text-sm italic opacity-60 font-medium">{pedido.vendedor?.nome || 'Operador Central'}</td>
+                          <td className="px-8 py-8 font-mono text-sm leading-none tabular-nums">R$ {pedido.itens?.reduce((acc: number, item: any) => acc + (item.preco * item.quantity || item.preco * item.quantidade || 0), 0).toFixed(2) || '0.00'}</td>
+                          <td className="px-8 py-8">
+                            <span className={`text-[10px] font-black px-3 py-1 rounded-full border uppercase tracking-widest shadow-xl ${
+                              pedido.status === 'APPROVED' || pedido.status === 'APROVADO' ? 'bg-green-500/10 text-green-400 border-green-500/20' :
+                              pedido.status === 'PENDING' || pedido.status === 'PENDENTE' ? 'bg-primary/10 text-primary border-primary/20 animate-pulse' :
+                              'bg-red-500/10 text-red-500 border-red-500/20'
+                            }`}>
+                                {pedido.status === 'APPROVED' ? 'APROVADO' : 
+                                 pedido.status === 'PENDING' ? 'PENDENTE' : 
+                                 pedido.status === 'REJECTED' ? 'REJEITADO' : pedido.status}
+                            </span>
+                          </td>
+                          <td className="px-8 py-8 text-right">
+                            {pedido.status === 'PENDING' || pedido.status === 'PENDENTE' ? (
+                              <div className="flex items-center justify-end gap-2">
+                                  <button onClick={() => handleAprovar(pedido.id)} className="p-3 glass rounded-xl hover:text-green-400 transition-all shadow-xl hover:scale-110">
+                                    <CheckCircle2 size={16} />
+                                  </button>
+                                  <button onClick={() => { setPedidoSelecionado(pedido); setMostrarModalRejeicao(true); }} className="p-3 glass rounded-xl hover:text-red-500 transition-all shadow-xl hover:scale-110">
+                                    <XCircle size={16} />
+                                  </button>
+                              </div>
+                            ) : (
+                              <button 
+                                onClick={() => notificar(`Pedido ${pedido.codigo} está com status: ${pedido.status}`, 'info')}
+                                className="p-3 glass rounded-xl opacity-40 hover:opacity-100 transition-all shadow-xl"
+                              >
+                                <Eye size={16} />
                               </button>
-                              <button onClick={() => { setPedidoSelecionado(pedido); setMostrarModalRejeicao(true); }} className="p-3 glass rounded-xl hover:text-red-500 transition-all shadow-xl hover:scale-110">
-                                <XCircle size={16} />
-                              </button>
-                          </div>
-                        ) : (
-                          <button className="p-3 glass rounded-xl opacity-40 hover:opacity-100 transition-all shadow-xl"><Eye size={16} /></button>
-                        )}
-                      </td>
-                  </tr>
-                ))}
-              </tbody>
-          </table>
+                            )}
+                          </td>
+                      </tr>
+                    ))}
+                  </tbody>
+              </table>
+
+              {/* Paginação */}
+              {pedidosFiltrados.length > itensPorPagina && (
+                <div className="flex items-center justify-between px-8 py-5 bg-white/[0.01] border-t border-white/5">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60">
+                    Página {paginaAtual} de {Math.ceil(pedidosFiltrados.length / itensPorPagina)}
+                  </span>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setPaginaAtual(prev => Math.max(prev - 1, 1))}
+                      disabled={paginaAtual === 1}
+                      className="p-3 glass rounded-xl hover:text-primary transition-all disabled:opacity-30 disabled:hover:text-white"
+                    >
+                      <ChevronLeft size={16} />
+                    </button>
+                    <button
+                      onClick={() => setPaginaAtual(prev => Math.min(prev + 1, Math.ceil(pedidosFiltrados.length / itensPorPagina)))}
+                      disabled={paginaAtual === Math.ceil(pedidosFiltrados.length / itensPorPagina)}
+                      className="p-3 glass rounded-xl hover:text-primary transition-all disabled:opacity-30 disabled:hover:text-white"
+                    >
+                      <ChevronRight size={16} />
+                    </button>
+                  </div>
+                </div>
+              )}
+             </>
+           )}
          </div>
       </div>
 

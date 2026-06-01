@@ -1,64 +1,102 @@
 'use server';
-
 import prisma from '@/lib/prisma';
 
 export async function obterMetricasDashboard() {
+  const now = new Date();
+  
   try {
     const totalPedidos = await prisma.order.count();
     const pendentes = await prisma.order.count({ where: { status: 'PENDING' } });
     const aprovados = await prisma.order.count({ where: { status: 'APPROVED' } });
     const rejeitados = await prisma.order.count({ where: { status: 'REJECTED' } });
 
-    const lotesVencidosCount = await prisma.lot.count({ where: { status: 'EXPIRED' } });
-    const estoqueTotal = await prisma.lot.aggregate({
-      _sum: { availableQuantity: true }
-    });
-
-    const hoje = new Date();
-    const trintaDias = new Date();
-    trintaDias.setDate(hoje.getDate() + 30);
-
-    const lotesProximosCount = await prisma.lot.count({
+    const lotesVencidos = await prisma.lot.count({
       where: {
-        expirationDate: { lte: trintaDias, gt: hoje },
-        status: 'ACTIVE'
+        expirationDate: { lte: now },
+        availableQuantity: { gt: 0 }
       }
     });
 
-    const alertasVencidos = await prisma.lot.findMany({
-      where: { status: 'EXPIRED' },
-      include: { product: true }
-    });
+    const thirtyDaysFromNow = new Date();
+    thirtyDaysFromNow.setDate(now.getDate() + 30);
 
-    const alertasProximos = await prisma.lot.findMany({
+    const lotesProximos = await prisma.lot.count({
       where: {
-        expirationDate: { lte: trintaDias, gt: hoje },
-        status: 'ACTIVE'
-      },
-      include: { product: true }
+        expirationDate: {
+          gt: now,
+          lte: thirtyDaysFromNow
+        },
+        availableQuantity: { gt: 0 }
+      }
     });
 
-    const mapAlerta = (l: any) => ({
+    const sumEstoque = await prisma.lot.aggregate({
+      where: {
+        availableQuantity: { gt: 0 }
+      },
+      _sum: {
+        availableQuantity: true
+      }
+    });
+    const estoqueTotal = sumEstoque._sum.availableQuantity || 0;
+
+    const lotesVencidosLista = await prisma.lot.findMany({
+      where: { 
+        expirationDate: { lte: now },
+        availableQuantity: { gt: 0 }
+      },
+      include: { product: true },
+      take: 5
+    });
+
+    const lotesProximosLista = await prisma.lot.findMany({
+      where: { 
+        expirationDate: { gt: now, lte: thirtyDaysFromNow },
+        availableQuantity: { gt: 0 }
+      },
+      include: { product: true },
+      take: 5
+    });
+
+    const alertasVencidos = lotesVencidosLista.map(l => ({
       id: l.id,
       produto: l.product.name,
       lote: l.code,
-      validade: l.expirationDate.toISOString(),
-      quantidade: l.availableQuantity
-    });
+      quantidade: l.availableQuantity,
+      validade: l.expirationDate
+    }));
+
+    const alertasProximos = lotesProximosLista.map(l => ({
+      id: l.id,
+      produto: l.product.name,
+      lote: l.code,
+      quantidade: l.availableQuantity,
+      validade: l.expirationDate
+    }));
 
     return {
       totalPedidos,
       pendentes,
       aprovados,
       rejeitados,
-      lotesVencidos: lotesVencidosCount,
-      estoqueTotal: estoqueTotal._sum.availableQuantity || 0,
-      lotesProximos: lotesProximosCount,
-      alertasVencidos: alertasVencidos.map(mapAlerta),
-      alertasProximos: alertasProximos.map(mapAlerta)
+      lotesVencidos,
+      lotesProximos,
+      estoqueTotal,
+      alertasVencidos,
+      alertasProximos
     };
   } catch (error) {
-    console.error('Erro ao obter metricas:', error);
-    return null;
+    console.error("Erro ao obter metricas:", error);
+    return {
+      totalPedidos: 0,
+      pendentes: 0,
+      aprovados: 0,
+      rejeitados: 0,
+      lotesVencidos: 0,
+      lotesProximos: 0,
+      estoqueTotal: 0,
+      alertasVencidos: [],
+      alertasProximos: []
+    };
   }
 }
