@@ -25,7 +25,7 @@ const pedidosMockados = [
 export default function PaginaMonitoramentoGerencial() {
   const { notificar } = usarNotificacao();
   const [carregando, setCarregando] = useState(true);
-  const [pedidos, setPedidos] = useState(pedidosMockados);
+  const [pedidos, setPedidos] = useState<any[]>([]);
   const [pedidoSelecionado, setPedidoSelecionado] = useState<any>(null);
   const [mostrarModalRejeicao, setMostrarModalRejeicao] = useState(false);
   const [termoBusca, setTermoBusca] = useState('');
