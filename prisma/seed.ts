@@ -30,24 +30,20 @@ async function main() {
     { name: 'OFFICER', description: 'Oficial de Galpão / Auditor' },
   ];
 
-  const createdRoles = {};
+  const createdRoles: Record<string, any> = {};
   for (const role of roles) {
     createdRoles[role.name] = await prisma.role.create({ data: role });
   }
 
-  const passwordHash = await bcrypt.hash('BeeSystem@2026', 10);
-  const passwordLucas = await bcrypt.hash('beesystem@2024', 10);
-  
   const users = [
-    { name: 'Admin Supremo', email: 'admin@voltguard.com', cpf: '00000000001', roleId: createdRoles['ADMIN'].id, password: passwordHash },
-    { name: 'Gerente Operacional', email: 'gerente@voltguard.com', cpf: '00000000002', roleId: createdRoles['MANAGER'].id, password: passwordHash },
-    { name: 'Vendedor Sênior', email: 'vendedor@voltguard.com', cpf: '00000000003', roleId: createdRoles['SELLER'].id, password: passwordHash },
-    { name: 'Oficial de Expedição', email: 'oficial@voltguard.com', cpf: '00000000004', roleId: createdRoles['OFFICER'].id, password: passwordHash },
-    // Re-adicionando o usuário antigo para evitar bloqueio no login
-    { name: 'Lucas Nunes', email: 'lucas@beesystem.com', cpf: '99999999999', roleId: createdRoles['ADMIN'].id, password: passwordLucas },
+    { name: 'Admin Supremo', email: 'admin@voltguard.com', cpf: '00000000001', roleId: createdRoles['ADMIN'].id, password: null },
+    { name: 'Gerente Operacional', email: 'gerente@voltguard.com', cpf: '00000000002', roleId: createdRoles['MANAGER'].id, password: null },
+    { name: 'Vendedor Sênior', email: 'vendedor@voltguard.com', cpf: '00000000003', roleId: createdRoles['SELLER'].id, password: null },
+    { name: 'Oficial de Expedição', email: 'oficial@voltguard.com', cpf: '00000000004', roleId: createdRoles['OFFICER'].id, password: null },
+    { name: 'Lucas Nunes', email: 'lucas@beesystem.com', cpf: '99999999999', roleId: createdRoles['ADMIN'].id, password: null },
   ];
 
-  const createdUsers = {};
+  const createdUsers: Record<string, any> = {};
   for (const user of users) {
     createdUsers[user.email] = await prisma.user.create({ data: user });
   }
@@ -78,7 +74,7 @@ async function main() {
     { code: 'SKU-VG-LUV-02', name: 'Luva Isolante Classe 0', category: 'EPI', price: 45.50, minStock: 100 },
   ];
 
-  const createdProducts = {};
+  const createdProducts: Record<string, any> = {};
   for (const product of products) {
     createdProducts[product.code] = await prisma.product.create({ data: product });
   }

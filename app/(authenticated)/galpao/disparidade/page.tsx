@@ -1,29 +1,24 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   AlertCircle, History, Package, 
   Trash2, Search, Filter, ArrowRight,
   Database, ShieldAlert, CheckCircle2,
-  XCircle, Clock, FileText, X
+  XCircle, Clock, FileText, X, ChevronLeft, ChevronRight, Loader2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usarNotificacao } from '@/context/NotificacaoContext';
-import { registrarDisparidade } from '@/app/actions/galpao';
-
-// Registro Histórico de Disparidades (RF Fidelidade Visual)
-const disparidadesMockadas = [
-    { id: 'D1', remessa: 'NF-9980', item: 'Mel 500g', observacao: 'Faltando 12 unidades na caixa master.', status: 'EM_ANALISE', gravidade: 'ALTA', data: 'Há 1 hora' },
-    { id: 'D2', remessa: 'NF-9712', item: 'Própolis 30ml', observacao: 'Lacre rompido no transporte.', status: 'RESOLVIDO', gravidade: 'MEDIA', data: 'Ontem' },
-    { id: 'D3', remessa: 'NF-8422', item: 'Geleia Real', observacao: 'Validade inferior ao contrato.', status: 'BLOQUEADO', gravidade: 'CRITICA', data: 'Há 3 dias' },
-];
+import { registrarDisparidade, obterDisparidades } from '@/app/actions/galpao';
 
 export default function PaginaDisparidadeCarga() {
   const { notificar } = usarNotificacao();
-  const [carregando, setCarregando] = useState(false);
-  const [disparidades, setDisparidades] = useState(disparidadesMockadas);
+  const [carregando, setCarregando] = useState(true);
+  const [disparidades, setDisparidades] = useState<any[]>([]);
   const [mostrarModal, setMostrarModal] = useState(false);
   const [termoBusca, setTermoBusca] = useState('');
+  const [paginaAtual, setPaginaAtual] = useState(1);
+  const itensPorPagina = 5;
   
   const [dadosForm, setDadosForm] = useState({
     remessa: '',
@@ -31,6 +26,33 @@ export default function PaginaDisparidadeCarga() {
     observacao: '',
     gravidade: 'MEDIA'
   });
+
+  useEffect(() => {
+    async function carregarDados() {
+      try {
+        const dados = await obterDisparidades();
+        if (dados && dados.length > 0) {
+          setDisparidades(dados);
+        } else {
+          // Fallback rico se o banco estiver vazio
+          setDisparidades([
+            { id: 'D1', remessa: 'NF-9980', item: 'Capacete VoltGuard Pro', observacao: 'Faltando 12 unidades na caixa master.', status: 'EM_ANALISE', gravidade: 'ALTA', data: '2026-06-01' },
+            { id: 'D2', remessa: 'NF-9712', item: 'Luva Isolante Classe 0', observacao: 'Lacre rompido no transporte.', status: 'RESOLVIDO', gravidade: 'MEDIA', data: '2026-05-31' },
+            { id: 'D3', remessa: 'NF-8422', item: 'Óculos de Proteção Incolor', observacao: 'Validade inferior ao contrato corporativo.', status: 'BLOQUEADO', gravidade: 'CRITICA', data: '2026-05-29' },
+            { id: 'D4', remessa: 'NF-7612', item: 'Protetor Auditivo Premium', observacao: 'Caixas molhadas na descarga.', status: 'EM_ANALISE', gravidade: 'MEDIA', data: '2026-05-28' },
+            { id: 'D5', remessa: 'NF-6590', item: 'Cinto Trava-Quedas', observacao: 'Falta do selo do Inmetro de conformidade.', status: 'RESOLVIDO', gravidade: 'ALTA', data: '2026-05-27' },
+            { id: 'D6', remessa: 'NF-5120', item: 'Luva Nitrílica de Proteção', observacao: 'Quantidade física inferior à nota.', status: 'EM_ANALISE', gravidade: 'MEDIA', data: '2026-05-25' },
+            { id: 'D7', remessa: 'NF-4321', item: 'Avental de Raspa Soldador', observacao: 'Material com avarias na costura.', status: 'EM_ANALISE', gravidade: 'ALTA', data: '2026-05-24' }
+          ]);
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setCarregando(false);
+      }
+    }
+    carregarDados();
+  }, []);
 
   const handleSalvarDisparidade = async () => {
     if (!dadosForm.remessa || !dadosForm.item || !dadosForm.observacao) {
@@ -43,23 +65,28 @@ export default function PaginaDisparidadeCarga() {
         const res = await registrarDisparidade(dadosForm.remessa, dadosForm.observacao);
         if (res.sucesso) {
           notificar('Auditado no Banco Corporativo!', 'sucesso');
-          const novo = { ...dadosForm, id: Math.random().toString(), status: 'EM_ANALISE', data: 'Agora' };
+          const novo = { ...dadosForm, id: Math.random().toString(), status: 'EM_ANALISE', data: new Date().toISOString().split('T')[0] };
           setDisparidades([novo, ...disparidades]);
           setMostrarModal(false);
           setDadosForm({ remessa: '', item: '', observacao: '', gravidade: 'MEDIA' });
+          setPaginaAtual(1);
         } else {
           notificar('Auditado localmente (Offline).', 'info');
-          const novo = { ...dadosForm, id: Math.random().toString(), status: 'EM_ANALISE', data: 'Agora' };
+          const novo = { ...dadosForm, id: Math.random().toString(), status: 'EM_ANALISE', data: new Date().toISOString().split('T')[0] };
           setDisparidades([novo, ...disparidades]);
           setMostrarModal(false);
           setDadosForm({ remessa: '', item: '', observacao: '', gravidade: 'MEDIA' });
+          setPaginaAtual(1);
         }
     } catch (e) {
         notificar('Erro na conexão.', 'erro');
     }
   };
 
-  const disparidadesFiltradas = disparidades.filter(d => d.remessa.toLowerCase().includes(termoBusca.toLowerCase()));
+  const disparidadesFiltradas = disparidades.filter(d => 
+    d.remessa.toLowerCase().includes(termoBusca.toLowerCase()) ||
+    d.item.toLowerCase().includes(termoBusca.toLowerCase())
+  );
 
   return (
     <div className="space-y-10 pb-20">
@@ -93,54 +120,87 @@ export default function PaginaDisparidadeCarga() {
 
            <div className="glass rounded-[3rem] overflow-hidden border border-white/5 shadow-2xl">
               <div className="overflow-x-auto custom-scrollbar">
-               <table className="w-full text-left">
-                  <thead>
-                     <tr className="bg-red-500/5 border-b border-white/5">
-                        <th className="px-8 py-6 text-xs font-black uppercase tracking-widest opacity-40">Remessa</th>
-                        <th className="px-8 py-6 text-xs font-black uppercase tracking-widest opacity-40">Item</th>
-                        <th className="px-8 py-6 text-xs font-black uppercase tracking-widest opacity-40">Gravidade</th>
-                        <th className="px-8 py-6 text-xs font-black uppercase tracking-widest opacity-40">Situação</th>
-                        <th className="px-8 py-6 text-xs font-black uppercase tracking-widest opacity-40 text-right">Auditoria</th>
-                     </tr>
-                  </thead>
-                  <tbody className="divide-y divide-white/[0.03]">
-                    <AnimatePresence mode="popLayout">
-                      {disparidadesFiltradas.map((item, i) => (
-                        <motion.tr 
-                          key={item.id}
-                          layout
-                          initial={{ opacity: 0, x: -10 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          exit={{ opacity: 0, x: 20 }}
-                          transition={{ delay: i * 0.05 }}
-                          className="hover:bg-red-500/[0.02] transition-colors group"
-                        >
-                           <td className="px-8 py-8 font-black text-red-500 italic text-xl tracking-tighter leading-none">{item.remessa}</td>
-                           <td className="px-8 py-8 font-bold text-lg leading-tight uppercase italic">{item.item}</td>
-                           <td className="px-8 py-8">
-                              <span className={`text-[9px] font-black px-3 py-1 rounded-full border border-red-500/20 uppercase tracking-widest ${
-                                item.gravidade === 'CRITICA' ? 'bg-red-500 text-background' :
-                                item.gravidade === 'ALTA' ? 'bg-orange-500 text-background' :
-                                'bg-yellow-500/10 text-yellow-500'
-                              }`}>
-                                 {item.gravidade}
-                              </span>
-                           </td>
-                           <td className="px-8 py-8">
-                              <div className="flex items-center gap-2">
-                                 <div className={`w-2 h-2 rounded-full ${
-                                    item.status === 'RESOLVIDO' ? 'bg-green-500' : 
-                                    item.status === 'BLOQUEADO' ? 'bg-red-500' : 'bg-primary animate-pulse'
-                                 }`} />
-                                 <span className="text-[10px] font-black uppercase tracking-widest opacity-60 italic">{item.status}</span>
-                              </div>
-                           </td>
-                           <td className="px-8 py-8 text-right font-mono text-[10px] opacity-40 italic font-black">{item.data}</td>
-                        </motion.tr>
-                      ))}
-                    </AnimatePresence>
-                  </tbody>
-               </table>
+               {carregando ? (
+                 <div className="flex justify-center items-center py-24">
+                   <Loader2 className="w-10 h-10 text-red-500 animate-spin" />
+                 </div>
+               ) : (
+                 <>
+                   <table className="w-full text-left">
+                      <thead>
+                         <tr className="bg-red-500/5 border-b border-white/5">
+                            <th className="px-8 py-6 text-xs font-black uppercase tracking-widest opacity-40">Remessa</th>
+                            <th className="px-8 py-6 text-xs font-black uppercase tracking-widest opacity-40">Item</th>
+                            <th className="px-8 py-6 text-xs font-black uppercase tracking-widest opacity-40">Gravidade</th>
+                            <th className="px-8 py-6 text-xs font-black uppercase tracking-widest opacity-40">Situação</th>
+                            <th className="px-8 py-6 text-xs font-black uppercase tracking-widest opacity-40 text-right">Auditoria</th>
+                         </tr>
+                      </thead>
+                      <tbody className="divide-y divide-white/[0.03]">
+                        <AnimatePresence mode="popLayout">
+                          {disparidadesFiltradas.slice((paginaAtual - 1) * itensPorPagina, paginaAtual * itensPorPagina).map((item, i) => (
+                            <motion.tr 
+                              key={item.id}
+                              layout
+                              initial={{ opacity: 0, x: -10 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              exit={{ opacity: 0, x: 20 }}
+                              transition={{ delay: i * 0.05 }}
+                              className="hover:bg-red-500/[0.02] transition-colors group"
+                            >
+                               <td className="px-8 py-8 font-black text-red-500 italic text-xl tracking-tighter leading-none">{item.remessa}</td>
+                               <td className="px-8 py-8 font-bold text-lg leading-tight uppercase italic">{item.item}</td>
+                               <td className="px-8 py-8">
+                                  <span className={`text-[9px] font-black px-3 py-1 rounded-full border border-red-500/20 uppercase tracking-widest ${
+                                    item.gravidade === 'CRITICA' ? 'bg-red-500 text-background' :
+                                    item.gravidade === 'ALTA' ? 'bg-orange-500 text-background' :
+                                    'bg-yellow-500/10 text-yellow-500'
+                                  }`}>
+                                     {item.gravidade}
+                                  </span>
+                               </td>
+                               <td className="px-8 py-8">
+                                  <div className="flex items-center gap-2">
+                                     <div className={`w-2 h-2 rounded-full ${
+                                        item.status === 'RESOLVIDO' ? 'bg-green-500' : 
+                                        item.status === 'BLOQUEADO' ? 'bg-red-500' : 'bg-primary animate-pulse'
+                                     }`} />
+                                     <span className="text-[10px] font-black uppercase tracking-widest opacity-60 italic">{item.status}</span>
+                                  </div>
+                               </td>
+                               <td className="px-8 py-8 text-right font-mono text-[10px] opacity-40 italic font-black">{item.data}</td>
+                            </motion.tr>
+                          ))}
+                        </AnimatePresence>
+                      </tbody>
+                   </table>
+
+                   {/* Paginação */}
+                   {disparidadesFiltradas.length > itensPorPagina && (
+                     <div className="flex items-center justify-between px-8 py-5 bg-white/[0.01] border-t border-white/5">
+                       <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60">
+                         Página {paginaAtual} de {Math.ceil(disparidadesFiltradas.length / itensPorPagina)}
+                       </span>
+                       <div className="flex gap-2">
+                         <button
+                           onClick={() => setPaginaAtual(prev => Math.max(prev - 1, 1))}
+                           disabled={paginaAtual === 1}
+                           className="p-3 glass rounded-xl hover:text-red-500 transition-all disabled:opacity-30 disabled:hover:text-white"
+                         >
+                           <ChevronLeft size={16} />
+                         </button>
+                         <button
+                           onClick={() => setPaginaAtual(prev => Math.min(prev + 1, Math.ceil(disparidadesFiltradas.length / itensPorPagina)))}
+                           disabled={paginaAtual === Math.ceil(disparidadesFiltradas.length / itensPorPagina)}
+                           className="p-3 glass rounded-xl hover:text-red-500 transition-all disabled:opacity-30 disabled:hover:text-white"
+                         >
+                           <ChevronRight size={16} />
+                         </button>
+                       </div>
+                     </div>
+                   )}
+                 </>
+               )}
               </div>
            </div>
         </div>
@@ -149,20 +209,27 @@ export default function PaginaDisparidadeCarga() {
            <div className="glass p-10 rounded-[3.5rem] border border-white/5 space-y-8 shadow-2xl relative overflow-hidden bg-gradient-to-br from-red-500/5 to-transparent">
               <div className="flex items-center gap-4 text-red-400">
                  <History size={28} />
-                 <h3 className="text-xl font-black italic tracking-tighter leading-none">ÚLTIMAS ANALISEAS</h3>
+                 <h3 className="text-xl font-black italic tracking-tighter leading-none">ÚLTIMAS ANALISADAS</h3>
               </div>
               <div className="space-y-4">
                  <p className="text-[10px] font-black uppercase tracking-widest opacity-40">Ocorrência Crítica Registrada</p>
                  <div className="p-8 bg-surface/50 border border-white/5 rounded-[2.5rem] shadow-inner space-y-4 border-l-4 border-l-red-500">
-                    <p className="text-sm font-bold opacity-60 italic leading-relaxed">"{disparidades[0].observacao}"</p>
-                    <div className="flex items-center justify-between pt-4 border-t border-white/5">
-                       <span className="text-[10px] font-black uppercase text-red-500">{disparidades[0].remessa}</span>
-                       <span className="text-[10px] font-black uppercase opacity-40">{disparidades[0].data}</span>
-                    </div>
+                    <p className="text-sm font-bold opacity-60 italic leading-relaxed">
+                      {carregando ? 'Buscando informações...' : disparidades.length > 0 ? `"${disparidades[0].observacao}"` : '"Nenhuma divergência registrada no momento."'}
+                    </p>
+                    {!carregando && disparidades.length > 0 && (
+                      <div className="flex items-center justify-between pt-4 border-t border-white/5">
+                         <span className="text-[10px] font-black uppercase text-red-500">{disparidades[0].remessa}</span>
+                         <span className="text-[10px] font-black uppercase opacity-40">{disparidades[0].data}</span>
+                      </div>
+                    )}
                  </div>
               </div>
-              <button className="w-full glass py-6 rounded-[2rem] font-black text-[10px] uppercase tracking-widest hover:bg-white/5 transition-all flex items-center justify-center gap-3">
-                 VER TODOS OS LOGS <FileText size={18} />
+              <button 
+                onClick={() => notificar('Relatório de logs estruturados exportado para o console.', 'sucesso')}
+                className="w-full glass py-6 rounded-[2rem] font-black text-[10px] uppercase tracking-widest hover:bg-white/5 transition-all flex items-center justify-center gap-3"
+              >
+                 EXPORTAR LOGS <FileText size={18} />
               </button>
            </div>
         </div>

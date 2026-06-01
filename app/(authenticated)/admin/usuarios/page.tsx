@@ -5,7 +5,7 @@ import {
   Users, UserPlus, Edit2, ShieldAlert,
   Trash2, Search, Filter, MoreVertical,
   CheckCircle2, XCircle, AlertCircle, Mail,
-  CreditCard, Shield, X, Database
+  CreditCard, Shield, X, Database, KeyRound, ChevronLeft, ChevronRight, Loader2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usarNotificacao } from '@/context/NotificacaoContext';
@@ -22,6 +22,11 @@ const usuariosMockados = [
   { id: '2', nome: 'Lucas Oliveira Santos', email: 'lucas.oliveira@beesystem.com', cpf: '987.654.321-11', perfil: 'VENDEDOR', status: 'ATIVO' },
   { id: '3', nome: 'Beatriz Silva Lima', email: 'beatriz.lima@beesystem.com', cpf: '555.444.333-22', perfil: 'VENDEDOR', status: 'ATIVO' },
   { id: '4', nome: 'Carlos Eduardo Souza', email: 'carlos.souza@beesystem.com', cpf: '777.888.999-33', perfil: 'OFICIAL', status: 'ATIVO' },
+  { id: '5', nome: 'Daniel Rocha Mendes', email: 'daniel.rocha@beesystem.com', cpf: '111.222.333-44', perfil: 'VENDEDOR', status: 'ATIVO' },
+  { id: '6', nome: 'Eliana Costa Lima', email: 'eliana.costa@beesystem.com', cpf: '444.555.666-77', perfil: 'OFICIAL', status: 'ATIVO' },
+  { id: '7', nome: 'Felipe Almeida Silva', email: 'felipe.almeida@beesystem.com', cpf: '888.999.000-11', perfil: 'GERENTE', status: 'INATIVO' },
+  { id: '8', nome: 'Gabriela Duarte Santos', email: 'gabriela.duarte@beesystem.com', cpf: '222.333.444-55', perfil: 'VENDEDOR', status: 'ATIVO' },
+  { id: '9', nome: 'Hugo Martins Ferreira', email: 'hugo.martins@beesystem.com', cpf: '666.777.888-99', perfil: 'OFICIAL', status: 'ATIVO' }
 ];
 
 export default function PaginaGestaoUsuarios() {
@@ -31,12 +36,16 @@ export default function PaginaGestaoUsuarios() {
   const [mostrarModalAdicionar, setMostrarModalAdicionar] = useState(false);
   const [usuarioEditando, setUsuarioEditando] = useState<any>(null);
   const [termoBusca, setTermoBusca] = useState('');
+  const [senhaTemporariaGerada, setSenhaTemporariaGerada] = useState<string | null>(null);
+  const [paginaAtual, setPaginaAtual] = useState(1);
+  const itensPorPagina = 5;
 
   const [dadosForm, setDadosForm] = useState({
     nome: '',
     email: '',
     cpf: '',
-    perfil: 'VENDEDOR'
+    perfil: 'VENDEDOR',
+    senha: ''
   });
 
   // Tenta sincronizar com o banco real, mas mantém os mocks se falhar
@@ -59,20 +68,23 @@ export default function PaginaGestaoUsuarios() {
   }, []);
 
   const abrirModalParaCriar = () => {
-    setDadosForm({ nome: '', email: '', cpf: '', perfil: 'VENDEDOR' });
+    setDadosForm({ nome: '', email: '', cpf: '', perfil: 'VENDEDOR', senha: '' });
     setUsuarioEditando(null);
+    setSenhaTemporariaGerada(null);
     setMostrarModalAdicionar(true);
   };
 
   const abrirModalParaEditar = (usuario: any) => {
-    setDadosForm({ nome: usuario.nome, email: usuario.email, cpf: usuario.cpf, perfil: usuario.perfil });
+    setDadosForm({ nome: usuario.nome, email: usuario.email, cpf: usuario.cpf, perfil: usuario.perfil, senha: '' });
     setUsuarioEditando(usuario);
+    setSenhaTemporariaGerada(null);
     setMostrarModalAdicionar(true);
   };
 
   const fecharModal = () => {
     setMostrarModalAdicionar(false);
     setUsuarioEditando(null);
+    setSenhaTemporariaGerada(null);
   };
 
   const handleSalvar = async () => {
@@ -87,7 +99,13 @@ export default function PaginaGestaoUsuarios() {
     try {
       const res = await salvarUsuario({ ...dadosForm, id: usuarioEditando?.id });
       if (res.sucesso) {
-        notificar('Operação gravada no banco corporativo!', 'sucesso');
+        if (res.senhaTemporaria) {
+          setSenhaTemporariaGerada(res.senhaTemporaria);
+          notificar('Colaborador criado com sucesso! Copie a senha temporária abaixo.', 'sucesso');
+        } else {
+          notificar('Operação gravada no banco corporativo!', 'sucesso');
+          fecharModal();
+        }
         sincronizarComBanco();
       } else {
         // Se falhar no banco, salva no estado local (mock reactivo) para não travar o usuário
@@ -98,23 +116,26 @@ export default function PaginaGestaoUsuarios() {
           setUsuarios([novo, ...usuarios]);
         }
         notificar('Operação concluída localmente (Banco Offline).', 'info');
+        fecharModal();
       }
     } catch (e) {
       notificar('Erro técnico. Operação descartada.', 'erro');
+      fecharModal();
     }
-
-    fecharModal();
   };
 
   const handleAlternarStatus = async (usuario: any) => {
     try {
       const res = await alternarStatusUsuario(usuario.id, usuario.status);
       if (res.sucesso) {
-        notificar('Status operacional alterado no banco.', 'info');
+        const msg = usuario.status === 'ATIVO' ? 'Usuário desativado' : 'Usuário ativado';
+        notificar(msg, 'info');
         sincronizarComBanco();
       } else {
-        setUsuarios(usuarios.map(u => u.id === usuario.id ? { ...u, status: u.status === 'ATIVO' ? 'INATIVO' : 'ATIVO' } : u));
-        notificar('Status alterado localmente.', 'info');
+        const novoStatus = usuario.status === 'ATIVO' ? 'INATIVO' : 'ATIVO';
+        setUsuarios(usuarios.map(u => u.id === usuario.id ? { ...u, status: novoStatus } : u));
+        const msg = novoStatus === 'INATIVO' ? 'Usuário desativado' : 'Usuário ativado';
+        notificar(msg, 'info');
       }
     } catch (e) {
       notificar('Falha na conexão.', 'erro');
@@ -176,7 +197,10 @@ export default function PaginaGestaoUsuarios() {
             type="text"
             placeholder="Buscar por nome, e-mail ou CPF..."
             value={termoBusca}
-            onChange={(e) => setTermoBusca(e.target.value)}
+            onChange={(e) => {
+              setTermoBusca(e.target.value);
+              setPaginaAtual(1);
+            }}
             className="w-full bg-surface border border-white/5 rounded-xl pl-12 pr-4 py-4 outline-none focus:border-primary/50 transition-all font-medium shadow-inner"
           />
         </div>
@@ -207,7 +231,7 @@ export default function PaginaGestaoUsuarios() {
                 ))
               ) : (
                 <AnimatePresence mode="popLayout">
-                  {usuariosFiltrados.map((item, i) => (
+                  {usuariosFiltrados.slice((paginaAtual - 1) * itensPorPagina, paginaAtual * itensPorPagina).map((item, i) => (
                     <motion.tr
                       key={item.id}
                       layout
@@ -269,6 +293,31 @@ export default function PaginaGestaoUsuarios() {
               )}
             </tbody>
           </table>
+
+          {/* Paginação */}
+          {usuariosFiltrados.length > itensPorPagina && (
+            <div className="flex items-center justify-between px-8 py-5 bg-white/[0.01] border-t border-white/5">
+              <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60">
+                Página {paginaAtual} de {Math.ceil(usuariosFiltrados.length / itensPorPagina)}
+              </span>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setPaginaAtual(prev => Math.max(prev - 1, 1))}
+                  disabled={paginaAtual === 1}
+                  className="p-3 glass rounded-xl hover:text-primary transition-all disabled:opacity-30 disabled:hover:text-white"
+                >
+                  <ChevronLeft size={16} />
+                </button>
+                <button
+                  onClick={() => setPaginaAtual(prev => Math.min(prev + 1, Math.ceil(usuariosFiltrados.length / itensPorPagina)))}
+                  disabled={paginaAtual === Math.ceil(usuariosFiltrados.length / itensPorPagina)}
+                  className="p-3 glass rounded-xl hover:text-primary transition-all disabled:opacity-30 disabled:hover:text-white"
+                >
+                  <ChevronRight size={16} />
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -288,94 +337,133 @@ export default function PaginaGestaoUsuarios() {
               exit={{ opacity: 0, scale: 0.9, y: 40 }}
               className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg glass p-10 rounded-[3rem] z-[101] border border-white/5 shadow-[0_40px_100px_rgba(0,0,0,0.5)]"
             >
-              <div className="space-y-8">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="w-16 h-16 bg-primary/10 rounded-[1.5rem] flex items-center justify-center text-primary border border-primary/20">
-                      {usuarioEditando ? <Edit2 size={32} /> : <UserPlus size={32} />}
-                    </div>
-                    <div>
-                      <h2 className="text-3xl font-black italic tracking-tighter uppercase whitespace-nowrap leading-none">
-                        {usuarioEditando ? 'Dados Operador' : 'Novo Operador'}
-                      </h2>
-                      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest opacity-60 mt-2">Gestão de Identidade BEESYSTEM</p>
+              {senhaTemporariaGerada ? (
+                <div className="space-y-8">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="w-16 h-16 bg-green-500/10 rounded-[1.5rem] flex items-center justify-center text-green-500 border border-green-500/20">
+                        <CheckCircle2 size={32} />
+                      </div>
+                      <div>
+                        <h2 className="text-3xl font-black italic tracking-tighter uppercase whitespace-nowrap leading-none text-green-500">
+                          Acesso Gerado
+                        </h2>
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest opacity-60 mt-2">Identidade Salva no Supabase Auth</p>
+                      </div>
                     </div>
                   </div>
-                  <button onClick={fecharModal} className="p-3 glass rounded-2xl hover:text-red-500 transition-all"><X size={24} /></button>
+
+                  <div className="space-y-6 bg-green-500/5 border border-green-500/10 rounded-[2rem] p-6 text-center">
+                    <p className="text-xs uppercase tracking-widest font-mono text-gray-400 font-tech">// Copie a senha temporária abaixo</p>
+                    
+                    <div className="bg-surface border border-white/5 rounded-2xl p-5 font-mono text-2xl font-black tracking-widest text-[#ffcc00] select-all cursor-pointer">
+                      {senhaTemporariaGerada}
+                    </div>
+                    
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">
+                      Esta senha temporária não será exibida novamente por motivos de conformidade de segurança. O operador deverá alterá-la no primeiro acesso.
+                    </p>
+                  </div>
+
+                  <div className="pt-4">
+                    <button
+                      onClick={fecharModal}
+                      className="w-full bg-primary text-background py-6 rounded-[2rem] font-black text-[10px] uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98] transition-all shadow-2xl shadow-primary/30"
+                    >
+                      Concluir e Fechar
+                    </button>
+                  </div>
                 </div>
-
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground px-4">Nome Completo</label>
-                    <div className="relative">
-                      <Users className="absolute left-6 top-1/2 -translate-y-1/2 text-muted-foreground opacity-30" size={20} />
-                      <input
-                        type="text"
-                        value={dadosForm.nome}
-                        onChange={(e) => setDadosForm({ ...dadosForm, nome: e.target.value })}
-                        className="w-full bg-surface border border-white/5 rounded-[2rem] pl-16 pr-8 py-5 outline-none focus:border-primary/50 transition-all font-bold text-lg shadow-inner"
-                        placeholder="Nome do Colaborador"
-                      />
+              ) : (
+                <div className="space-y-8">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="w-16 h-16 bg-primary/10 rounded-[1.5rem] flex items-center justify-center text-primary border border-primary/20">
+                        {usuarioEditando ? <Edit2 size={32} /> : <UserPlus size={32} />}
+                      </div>
+                      <div>
+                        <h2 className="text-3xl font-black italic tracking-tighter uppercase whitespace-nowrap leading-none">
+                          {usuarioEditando ? 'Dados Operador' : 'Novo Operador'}
+                        </h2>
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest opacity-60 mt-2">Gestão de Identidade BEESYSTEM</p>
+                      </div>
                     </div>
+                    <button onClick={fecharModal} className="p-3 glass rounded-2xl hover:text-red-500 transition-all"><X size={24} /></button>
                   </div>
 
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground px-4">E-mail Corporativo</label>
-                    <div className="relative">
-                      <Mail className="absolute left-6 top-1/2 -translate-y-1/2 text-muted-foreground opacity-30" size={20} />
-                      <input
-                        type="email"
-                        value={dadosForm.email}
-                        onChange={(e) => setDadosForm({ ...dadosForm, email: e.target.value })}
-                        className="w-full bg-surface border border-white/5 rounded-[2rem] pl-16 pr-8 py-5 outline-none focus:border-primary/50 transition-all font-bold text-lg shadow-inner"
-                        placeholder="colaborador@beesystem.com"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-4">
                     <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground px-4">Documento CPF</label>
-                      <input
-                        type="text"
-                        value={dadosForm.cpf}
-                        onChange={(e) => setDadosForm({ ...dadosForm, cpf: e.target.value })}
-                        className="w-full bg-surface border border-white/5 rounded-[2rem] px-8 py-5 outline-none focus:border-primary/50 transition-all font-mono font-bold text-lg shadow-inner"
-                        placeholder="000.000.000-00"
-                      />
+                      <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground px-4">Nome Completo</label>
+                      <div className="relative">
+                        <Users className="absolute left-6 top-1/2 -translate-y-1/2 text-muted-foreground opacity-30" size={20} />
+                        <input
+                          type="text"
+                          value={dadosForm.nome}
+                          onChange={(e) => setDadosForm({ ...dadosForm, nome: e.target.value })}
+                          className="w-full bg-surface border border-white/5 rounded-[2rem] pl-16 pr-8 py-5 outline-none focus:border-primary/50 transition-all font-bold text-lg shadow-inner"
+                          placeholder="Nome do Colaborador"
+                        />
+                      </div>
                     </div>
+
                     <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground px-4">Perfil Funcional</label>
-                      <select
-                        value={dadosForm.perfil}
-                        onChange={(e) => setDadosForm({ ...dadosForm, perfil: e.target.value as any })}
-                        className="w-full bg-surface border border-white/5 rounded-[2rem] px-8 py-5 outline-none focus:border-primary/50 transition-all font-black text-[10px] uppercase tracking-widest cursor-pointer shadow-inner appearance-none"
-                      >
-                        <option value="VENDEDOR">VENDEDOR</option>
-                        <option value="GERENTE">GERENTE</option>
-                        <option value="ADMIN">ADMIN</option>
-                        <option value="OFICIAL">OFICIAL</option>
-                      </select>
+                      <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground px-4">E-mail Corporativo</label>
+                      <div className="relative">
+                        <Mail className="absolute left-6 top-1/2 -translate-y-1/2 text-muted-foreground opacity-30" size={20} />
+                        <input
+                          type="email"
+                          value={dadosForm.email}
+                          onChange={(e) => setDadosForm({ ...dadosForm, email: e.target.value })}
+                          className="w-full bg-surface border border-white/5 rounded-[2rem] pl-16 pr-8 py-5 outline-none focus:border-primary/50 transition-all font-bold text-lg shadow-inner"
+                          placeholder="colaborador@beesystem.com"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground px-4">Documento CPF</label>
+                        <input
+                          type="text"
+                          value={dadosForm.cpf}
+                          onChange={(e) => setDadosForm({ ...dadosForm, cpf: e.target.value })}
+                          className="w-full bg-surface border border-white/5 rounded-[2rem] px-8 py-5 outline-none focus:border-primary/50 transition-all font-mono font-bold text-lg shadow-inner"
+                          placeholder="000.000.000-00"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground px-4">Perfil Funcional</label>
+                        <select
+                          value={dadosForm.perfil}
+                          onChange={(e) => setDadosForm({ ...dadosForm, perfil: e.target.value as any })}
+                          className="w-full bg-surface border border-white/5 rounded-[2rem] px-8 py-5 outline-none focus:border-primary/50 transition-all font-black text-[10px] uppercase tracking-widest cursor-pointer shadow-inner appearance-none"
+                        >
+                          <option value="VENDEDOR">VENDEDOR</option>
+                          <option value="GERENTE">GERENTE</option>
+                          <option value="ADMIN">ADMIN</option>
+                          <option value="OFICIAL">OFICIAL</option>
+                        </select>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <div className="flex gap-4 pt-4">
-                  <button
-                    onClick={fecharModal}
-                    className="flex-1 glass py-6 rounded-[2rem] font-black text-[10px] uppercase tracking-widest hover:bg-surface transition-all"
-                  >
-                    Abortar
-                  </button>
-                  <button
-                    onClick={handleSalvar}
-                    disabled={!dadosForm.nome || !dadosForm.email || !dadosForm.cpf}
-                    className="flex-1 bg-primary text-background py-6 rounded-[2rem] font-black text-[10px] uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-30 shadow-2xl shadow-primary/30"
-                  >
-                    {usuarioEditando ? 'Salvar Mudanças' : 'Garantir Acesso'}
-                  </button>
+                  <div className="flex gap-4 pt-4">
+                    <button
+                      onClick={fecharModal}
+                      className="flex-1 glass py-6 rounded-[2rem] font-black text-[10px] uppercase tracking-widest hover:bg-surface transition-all"
+                    >
+                      Abortar
+                    </button>
+                    <button
+                      onClick={handleSalvar}
+                      disabled={!dadosForm.nome || !dadosForm.email || !dadosForm.cpf}
+                      className="flex-1 bg-primary text-background py-6 rounded-[2rem] font-black text-[10px] uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-30 shadow-2xl shadow-primary/30"
+                    >
+                      {usuarioEditando ? 'Salvar Mudanças' : 'Garantir Acesso'}
+                    </button>
+                  </div>
                 </div>
-              </div>
+              )}
             </motion.div>
           </>
         )}
