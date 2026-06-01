@@ -1,49 +1,32 @@
 'use server';
-
 import prisma from '@/lib/prisma';
-import { revalidatePath } from 'next/cache';
-
-export async function listarProdutos() {
-  try {
-    return await prisma.produto.findMany({
-      include: { lotes: true }
-    });
-  } catch (error) {
-    console.error('Erro ao listar produtos:', error);
-    return [];
-  }
-}
+import { obterSessaoAtual } from './usuarios';
 
 export async function criarPedido(dados: any) {
   try {
-    const { cliente, total, itens, vendedorId } = dados;
+    const session = await obterSessaoAtual();
+    if (!session) return { sucesso: false, erro: 'Não autenticado' };
+
+    const customer = await prisma.customer.findFirst();
     
-    // Gerar código único e amigável (ex: PED-101...)
-    const totalPedidos = await prisma.pedido.count();
-    const codigo = `PED-${100 + totalPedidos + 1}`;
-    
-    // Iniciar transação para garantir integridade atômica
-    const novoPedido = await prisma.pedido.create({
+    const order = await prisma.order.create({
       data: {
-        codigo,
-        cliente,
-        status: 'PENDENTE',
-        vendedorId: vendedorId || '1', // Default se não houver login real
-        itens: {
-          create: itens.map((item: any) => ({
-            produtoId: item.id,
-            quantidade: item.quantidade,
-            preco: item.preco
-          }))
-        }
+        code: `PED-${Date.now()}`,
+        customerId: customer?.id || '',
+        sellerId: session.id,
+        status: 'PENDING',
+        totalAmount: 0
       }
     });
-    
-    revalidatePath('/vendas/novo-pedido');
-    revalidatePath('/gerencial/monitoramento');
-    return { sucesso: true, id: novoPedido.id };
-  } catch (error) {
-    console.error('Erro ao criar pedido:', error);
-    return { sucesso: false, erro: 'Falha na persistência logística: ' + (error instanceof Error ? error.message : 'Divergência de dados.') };
+
+    return { sucesso: true, orderId: order.id };
+  } catch (e) {
+    return { sucesso: false };
   }
+}
+
+export async function obterDadosNovoPedido() {
+  const produtos = await prisma.product.findMany({ include: { lots: true }});
+  const clientes = await prisma.customer.findMany();
+  return { produtos, clientes };
 }

@@ -1,26 +1,20 @@
 import { PrismaClient } from '@prisma/client';
-import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3';
-import path from 'path';
+import { Pool } from 'pg';
+import { PrismaPg } from '@prisma/adapter-pg';
 
-const criarInstanciaPrisma = () => {
-  const dbPath = path.join(process.cwd(), 'dev.db');
-  console.log('[Prisma] Inicializando com adapter BetterSQLite3:', dbPath);
-  try {
-    const adapter = new PrismaBetterSqlite3({ url: dbPath });
-    return new PrismaClient({ adapter });
-  } catch (e) {
-    console.error('[Prisma] Erro ao criar adapter/client:', e);
-    throw e;
-  }
-};
+const connectionString = process.env.DATABASE_URL!;
+const pool = new Pool({ connectionString });
+const adapter = new PrismaPg(pool);
 
-declare global {
-  var prisma: undefined | ReturnType<typeof criarInstanciaPrisma>;
-}
+const globalForPrisma = global as unknown as { prisma: PrismaClient };
 
-// Inicializando o cliente ou reutilizando o existente
-const prisma = globalThis.prisma ?? criarInstanciaPrisma();
+export const prisma =
+  globalForPrisma.prisma ||
+  new PrismaClient({
+    adapter,
+    log: ['query'],
+  });
+
+if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
 
 export default prisma;
-
-if (process.env.NODE_ENV !== 'production') globalThis.prisma = prisma;

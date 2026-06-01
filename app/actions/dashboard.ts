@@ -4,44 +4,61 @@ import prisma from '@/lib/prisma';
 
 export async function obterMetricasDashboard() {
   try {
-    const totalPedidos = await prisma.pedido.count();
-    const pendentes = await prisma.pedido.count({ where: { status: 'PENDENTE' } });
-    const produtos = await prisma.produto.count();
-    const estoqueBaixo = await prisma.produto.count({
+    const totalPedidos = await prisma.order.count();
+    const pendentes = await prisma.order.count({ where: { status: 'PENDING' } });
+    const aprovados = await prisma.order.count({ where: { status: 'APPROVED' } });
+    const rejeitados = await prisma.order.count({ where: { status: 'REJECTED' } });
+
+    const lotesVencidosCount = await prisma.lot.count({ where: { status: 'EXPIRED' } });
+    const estoqueTotal = await prisma.lot.aggregate({
+      _sum: { availableQuantity: true }
+    });
+
+    const hoje = new Date();
+    const trintaDias = new Date();
+    trintaDias.setDate(hoje.getDate() + 30);
+
+    const lotesProximosCount = await prisma.lot.count({
       where: {
-        itensPedido: {
-          some: {} // Exemplo simplificado
-        }
+        expirationDate: { lte: trintaDias, gt: hoje },
+        status: 'ACTIVE'
       }
     });
 
-    // Auditoria de lotes próximos ao vencimento
-    const hoje = new Date();
-    const proximoMes = new Date();
-    proximoMes.setMonth(hoje.getMonth() + 1);
+    const alertasVencidos = await prisma.lot.findMany({
+      where: { status: 'EXPIRED' },
+      include: { product: true }
+    });
 
-    const alertasValidade = await prisma.loteEstoque.count({
+    const alertasProximos = await prisma.lot.findMany({
       where: {
-        validade: {
-          lte: proximoMes,
-          gte: hoje
-        }
-      }
+        expirationDate: { lte: trintaDias, gt: hoje },
+        status: 'ACTIVE'
+      },
+      include: { product: true }
+    });
+
+    const mapAlerta = (l: any) => ({
+      id: l.id,
+      produto: l.product.name,
+      lote: l.code,
+      validade: l.expirationDate.toISOString(),
+      quantidade: l.availableQuantity
     });
 
     return {
       totalPedidos,
       pendentes,
-      produtosAtivos: produtos,
-      alertasValidade,
-      vendasRecentes: await prisma.pedido.findMany({
-          take: 5,
-          orderBy: { criadoEm: 'desc' },
-          include: { vendedor: true }
-      })
+      aprovados,
+      rejeitados,
+      lotesVencidos: lotesVencidosCount,
+      estoqueTotal: estoqueTotal._sum.availableQuantity || 0,
+      lotesProximos: lotesProximosCount,
+      alertasVencidos: alertasVencidos.map(mapAlerta),
+      alertasProximos: alertasProximos.map(mapAlerta)
     };
   } catch (error) {
-    console.error('Erro ao ler métricas:', error);
+    console.error('Erro ao obter metricas:', error);
     return null;
   }
 }
