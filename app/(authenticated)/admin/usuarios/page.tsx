@@ -31,8 +31,8 @@ const usuariosMockados = [
 
 export default function PaginaGestaoUsuarios() {
   const { notificar } = usarNotificacao();
-  const [carregando, setCarregando] = useState(false);
-  const [usuarios, setUsuarios] = useState(usuariosMockados);
+  const [carregando, setCarregando] = useState(true);
+  const [usuarios, setUsuarios] = useState<any[]>([]);
   const [mostrarModalAdicionar, setMostrarModalAdicionar] = useState(false);
   const [usuarioEditando, setUsuarioEditando] = useState<any>(null);
   const [termoBusca, setTermoBusca] = useState('');
@@ -55,9 +55,12 @@ export default function PaginaGestaoUsuarios() {
       const lista = await listarUsuarios();
       if (lista && lista.length > 0) {
         setUsuarios(lista);
+      } else {
+        setUsuarios(usuariosMockados);
       }
     } catch (e) {
       console.warn('Usando base local de dados (vôo manual).');
+      setUsuarios(usuariosMockados);
     } finally {
       setCarregando(false);
     }
