@@ -2,83 +2,63 @@
 
 import prisma from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
+import bcrypt from 'bcryptjs';
+import { cookies } from 'next/headers';
 
-export async function listarUsuarios() {
+async function obterUsuarioSessao() {
+  const cookieStore = await cookies();
+  const sessao = cookieStore.get('beesystem_sessao')?.value;
+  if (!sessao) return null;
   try {
-    return await prisma.usuario.findMany({
-      orderBy: { criadoEm: 'desc' }
-    });
-  } catch (error) {
-    console.error('Erro ao listar usuários:', error);
-    return [];
+    return JSON.parse(atob(sessao)) as { id: string; role: string; nome: string };
+  } catch {
+    return null;
   }
 }
 
-export async function salvarUsuario(dados: any) {
+export async function autenticarUsuario(email: string, senha: string) {
   try {
-    const { id, nome, email, cpf, perfil, status } = dados;
+    const usuario = await prisma.user.findFirst({
+      where: { email: email.toLowerCase().trim(), status: 'ACTIVE' },
+      include: { role: true }
+    });
 
-    if (id) {
-      // Atualizar
-      await prisma.usuario.update({
-        where: { id },
-        data: { nome, email, cpf, perfil, status }
-      });
-    } else {
-      // Criar novo amigável
-      await prisma.usuario.create({
-        data: { nome, email, cpf, perfil, status: 'ATIVO' }
-      });
+    if (!usuario) return { sucesso: false, erro: 'Usuário não encontrado ou inativo.' };
+
+    if (usuario.password) {
+      const senhaValida = await bcrypt.compare(senha, usuario.password);
+      if (!senhaValida) return { sucesso: false, erro: 'Senha incorreta.' };
     }
 
-    revalidatePath('/admin/usuarios');
-    return { sucesso: true };
-  } catch (error) {
-    console.error('Erro ao salvar usuário:', error);
-    return { sucesso: false, erro: 'Falha na persistência de dados. Verifique os campos.' };
-  }
-}
+    const dadosSessao = {
+      id: usuario.id,
+      nome: usuario.name,
+      email: usuario.email,
+      role: usuario.role.name,
+      cpf: usuario.cpf
+    };
 
-export async function alternarStatusUsuario(id: string, statusAtual: string) {
-  try {
-    const novoStatus = statusAtual === 'ATIVO' ? 'INATIVO' : 'ATIVO';
-    await prisma.usuario.update({
-      where: { id },
-      data: { status: novoStatus }
-    });
-    revalidatePath('/admin/usuarios');
-    return { sucesso: true };
-  } catch (error) {
-    console.error('Erro ao alternar status:', error);
-    return { sucesso: false };
-  }
-}
-
-export async function excluirUsuario(id: string) {
-  try {
-    await prisma.usuario.delete({
-      where: { id }
-    });
-    revalidatePath('/admin/usuarios');
-    return { sucesso: true };
-  } catch (error) {
-    console.error('Erro ao excluir usuário:', error);
-    return { sucesso: false };
-  }
-}
-
-export async function autenticarUsuario(email: string) {
-  try {
-    const usuario = await prisma.usuario.findFirst({
-      where: { email, status: 'ATIVO' }
+    const cookieStore = await cookies();
+    cookieStore.set('beesystem_sessao', btoa(JSON.stringify(dadosSessao)), {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 8, // 8 horas
+      path: '/'
     });
 
-    if (usuario) {
-      return { sucesso: true, usuario };
-    }
-    return { sucesso: false, erro: 'Usuário não encontrado ou inativo.' };
+    return { sucesso: true, usuario: dadosSessao };
   } catch (error) {
-    console.error('Erro na autenticação:', error);
     return { sucesso: false, erro: 'Erro técnico no servidor.' };
+  }
+}
+
+export async function encerrarSessao() {
+  try {
+    const cookieStore = await cookies();
+    cookieStore.delete('beesystem_sessao');
+    return { sucesso: true };
+  } catch {
+    return { sucesso: false };
   }
 }

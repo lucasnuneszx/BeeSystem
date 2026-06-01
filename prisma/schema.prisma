@@ -3,80 +3,196 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
 }
 
-model Usuario {
-  id        String   @id @default(uuid())
-  nome      String
-  email     String   @unique
-  cpf       String   @unique
-  perfil    String
-  status    String   @default("ATIVO")
-  criadoEm  DateTime @default(now())
-  pedidos   Pedido[]
-}
-
-model Produto {
+model Role {
   id          String   @id @default(uuid())
-  nome        String
-  sku         String   @unique
-  categoria   String
-  estoqueMin  Int      @default(10)
-  itensPedido ItemPedido[]
-  lotes       LoteEstoque[]
+  name        String   @unique
+  description String?
+  users       User[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
-model Fornecedor {
+model User {
+  id                   String         @id @default(uuid())
+  email                String         @unique
+  name                 String
+  cpf                  String         @unique
+  password             String?
+  roleId               String
+  role                 Role           @relation(fields: [roleId], references: [id])
+  status               String         @default("ACTIVE")
+  theme                String         @default("DARK")
+  notificationsEnabled Boolean        @default(true)
+  orders               Order[]
+  auditLogs            AuditLog[]
+  scannerEvents        ScannerEvent[]
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime       @updatedAt
+}
+
+model Customer {
   id        String   @id @default(uuid())
-  nome      String
-  cnpj      String   @unique
+  name      String
+  document  String   @unique
   email     String
-  lotes     LoteEstoque[]
+  orders    Order[]
+  createdAt DateTime @default(now())
 }
 
-model LoteEstoque {
+model Supplier {
+  id        String   @id @default(uuid())
+  name      String
+  document  String   @unique
+  email     String
+  lots      Lot[]
+  createdAt DateTime @default(now())
+}
+
+model Product {
+  id          String        @id @default(uuid())
+  code        String        @unique
+  name        String
+  category    String
+  price       Float
+  minStock    Int           @default(10)
+  lots        Lot[]
+  units       ProductUnit[]
+  orderItems  OrderItem[]
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
+
+model Lot {
+  id                String        @id @default(uuid())
+  code              String        @unique
+  productId         String
+  supplierId        String
+  quantity          Int
+  availableQuantity Int
+  expirationDate    DateTime
+  status            String        @default("ACTIVE")
+  location          String
+  product           Product       @relation(fields: [productId], references: [id])
+  supplier          Supplier      @relation(fields: [supplierId], references: [id])
+  units             ProductUnit[]
+  orderItems        OrderItem[]
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+}
+
+model ProductUnit {
+  id              String         @id @default(uuid())
+  uniqueCode      String         @unique
+  qrCodeValue     String         @unique
+  productId       String
+  lotId           String
+  status          String         @default("AVAILABLE")
+  currentLocation String?
+  product         Product        @relation(fields: [productId], references: [id])
+  lot             Lot            @relation(fields: [lotId], references: [id])
+  events          ScannerEvent[]
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+}
+
+model Order {
+  id          String      @id @default(uuid())
+  code        String      @unique
+  customerId  String
+  sellerId    String
+  status      String      @default("PENDING")
+  totalAmount Float
+  justification String?
+  customer    Customer    @relation(fields: [customerId], references: [id])
+  seller      User        @relation(fields: [sellerId], references: [id])
+  items       OrderItem[]
+  shipments   Shipment[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+model OrderItem {
+  id          String   @id @default(uuid())
+  orderId     String
+  productId   String
+  lotId       String?
+  quantity    Int
+  unitPrice   Float
+  fifoApplied Boolean  @default(false)
+  order       Order    @relation(fields: [orderId], references: [id])
+  product     Product  @relation(fields: [productId], references: [id])
+  lot         Lot?     @relation(fields: [lotId], references: [id])
+}
+
+model Shipment {
   id            String   @id @default(uuid())
-  numeroLote    String   @unique
-  quantidade    Int
-  validade      DateTime
-  localizacao   String
-  produtoId     String
-  fornecedorId  String
-  produto       Produto    @relation(fields: [produtoId], references: [id])
-  fornecedor    Fornecedor @relation(fields: [fornecedorId], references: [id])
-  criadoEm      DateTime @default(now())
+  orderId       String
+  status        String   @default("PREPARING")
+  trackingCode  String?  @unique
+  dispatchedAt  DateTime?
+  order         Order    @relation(fields: [orderId], references: [id])
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }
 
-model Pedido {
-  id            String   @id @default(uuid())
-  codigo        String   @unique
-  cliente       String
-  status        String
-  justificativa String?
-  vendedorId    String
-  vendedor      Usuario    @relation(fields: [vendedorId], references: [id])
-  itens         ItemPedido[]
-  criadoEm      DateTime @default(now())
-  atualizadoEm  DateTime @updatedAt
+model ScannerEvent {
+  id            String       @id @default(uuid())
+  unitId        String
+  userId        String
+  eventType     String
+  location      String?
+  unit          ProductUnit  @relation(fields: [unitId], references: [id])
+  user          User         @relation(fields: [userId], references: [id])
+  createdAt     DateTime     @default(now())
 }
 
-model ItemPedido {
-  id         String   @id @default(uuid())
-  pedidoId   String
-  produtoId  String
-  quantidade Int
-  preco      Float
-  pedido     Pedido  @relation(fields: [pedidoId], references: [id])
-  produto    Produto @relation(fields: [produtoId], references: [id])
+model Inventory {
+  id          String   @id @default(uuid())
+  location    String   @unique
+  status      String   @default("ACTIVE")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
-model LogAuditoria {
-  id         String   @id @default(uuid())
-  usuarioId  String
-  acao       String
-  modulo     String
-  detalhes   String
-  ip         String?
-  criadoEm   DateTime @default(now())
+model InventoryMovement {
+  id          String   @id @default(uuid())
+  productId   String
+  quantity    Int
+  type        String
+  reason      String
+  createdAt   DateTime @default(now())
+}
+
+model Discrepancy {
+  id          String   @id @default(uuid())
+  productId   String
+  expectedQty Int
+  actualQty   Int
+  status      String   @default("OPEN")
+  resolvedAt  DateTime?
+  createdAt   DateTime @default(now())
+}
+
+model AuditLog {
+  id          String   @id @default(uuid())
+  userId      String
+  action      String
+  entity      String
+  description String
+  ipAddress   String?
+  user        User     @relation(fields: [userId], references: [id])
+  createdAt   DateTime @default(now())
+}
+
+model Notification {
+  id          String   @id @default(uuid())
+  title       String
+  message     String
+  type        String
+  isRead      Boolean  @default(false)
+  userId      String
+  createdAt   DateTime @default(now())
 }
