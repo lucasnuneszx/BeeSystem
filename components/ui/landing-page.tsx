@@ -274,19 +274,7 @@ function ScrollGlobe({ sections, globeConfig = defaultGlobeConfig, className }: 
               )}>
                 <p>{section.description}</p>
                 
-                {/* Badges operacionais do Hero */}
-                {index === 0 && (
-                  <div className="flex flex-wrap gap-3 text-xs text-[#ffcc00]/80 mt-8 font-tech">
-                    <div className="flex items-center gap-2 border border-[#ffcc00]/20 px-4 py-2 rounded bg-[#ffcc00]/5 backdrop-blur-sm shadow-sm">
-                      <div className="w-1.5 h-1.5 rounded-full bg-[#ffcc00] animate-ping" />
-                      <span className="uppercase tracking-widest text-[9px] font-bold">Rastreabilidade Ativa</span>
-                    </div>
-                    <div className="flex items-center gap-2 border border-white/5 px-4 py-2 rounded bg-white/[0.02] backdrop-blur-sm shadow-sm">
-                      <div className="w-1.5 h-1.5 rounded-full bg-white/40" />
-                      <span className="uppercase tracking-widest text-[9px] font-bold text-gray-400">Scroll para Explorar</span>
-                    </div>
-                  </div>
-                )}
+                {/* Badges operacionais do Hero removidos */}
               </div>
 
               {/* Grid de Features Refinado (HUD, sem caixas quadradas de IA genéricas) */}
