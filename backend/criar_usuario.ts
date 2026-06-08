@@ -1,5 +1,5 @@
 import 'dotenv/config'; // Importação imediata com hoisting para carregar as variáveis de ambiente antes do Prisma!
-import { prisma } from './lib/prisma';
+import prisma from './db';
 import bcrypt from 'bcryptjs';
 
 async function main() {

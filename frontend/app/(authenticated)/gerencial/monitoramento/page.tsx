@@ -109,13 +109,6 @@ export default function PaginaMonitoramentoGerencial() {
           </h1>
           <p className="text-muted-foreground uppercase text-xs tracking-widest italic opacity-60 mt-1">Sincronizado com Ecossistema BeeSystem</p>
         </div>
-        <button 
-            onClick={carregarDados}
-            className="glass px-6 py-4 rounded-[2rem] border border-primary/20 text-primary font-black text-[10px] uppercase tracking-widest flex items-center gap-3 hover:bg-primary hover:text-background transition-all"
-        >
-            <Database size={18} className={carregando ? 'animate-spin' : ''} /> 
-            Sincronizar Auditoria
-        </button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

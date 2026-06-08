@@ -6,8 +6,9 @@ import { obterSessaoAtual } from './usuarios';
 export async function registrarScanner(qrCodeValue: string, location: string) {
   try {
     const session = await obterSessaoAtual();
-    if (!session || (session.role !== 'Oficial de Registros' && session.role !== 'admin' && session.role !== 'Gerente')) {
-      return { sucesso: false, erro: 'Acesso negado: Somente Oficiais de Registro podem utilizar o scanner.' };
+    const userRole = session?.role?.toUpperCase();
+    if (!session || (userRole !== 'OFFICER' && userRole !== 'ADMIN' && userRole !== 'MANAGER')) {
+      return { sucesso: false, erro: 'Acesso negado: Somente Oficiais, Gerentes ou Administradores podem registrar o scanner.' };
     }
 
     if (!qrCodeValue) throw new Error('QR Code obrigatório.'); // RN07

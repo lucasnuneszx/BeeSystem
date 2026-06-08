@@ -171,6 +171,12 @@ export async function listarUsuarios() {
 
 export async function salvarUsuario(dados: { id?: string; nome: string; email: string; cpf: string; perfil: string; senha?: string }) {
   try {
+    const emailNormalizado = dados.email.toLowerCase().trim();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.com$/;
+    if (!emailRegex.test(emailNormalizado)) {
+      return { sucesso: false, erro: 'O e-mail deve ser um endereço válido terminando com .com (exemplo@dominio.com).' };
+    }
+
     const mapPerfilToRole = (perfil: string) => {
       const map: Record<string, string> = {
         'ADMIN': 'ADMIN',
@@ -194,7 +200,7 @@ export async function salvarUsuario(dados: { id?: string; nome: string; email: s
       // Atualizar perfil
       const updateData: any = {
         name: dados.nome,
-        email: dados.email.toLowerCase().trim(),
+        email: emailNormalizado,
         cpf: dados.cpf,
         roleId: dbRole.id
       };
@@ -208,13 +214,16 @@ export async function salvarUsuario(dados: { id?: string; nome: string; email: s
       return { sucesso: true };
     } else {
       // Criar novo usuário no Supabase Auth e no Banco público
+      if (!dados.senha || dados.senha.trim() === '') {
+        return { sucesso: false, erro: 'A senha é obrigatória para a criação de um novo colaborador.' };
+      }
+      const senhaValida = dados.senha;
       let authUserId: string | null = null;
-      const tempPassword = 'VG-' + Math.random().toString(36).substring(2, 10).toUpperCase();
 
       try {
         const { data, error } = await supabase.auth.signUp({
-          email: dados.email.toLowerCase().trim(),
-          password: tempPassword
+          email: emailNormalizado,
+          password: senhaValida
         });
 
         if (error) {
@@ -239,14 +248,14 @@ export async function salvarUsuario(dados: { id?: string; nome: string; email: s
         return { sucesso: false, erro: 'Falha ao obter ID do usuário no Supabase Auth.' };
       }
 
-      const passwordHash = await bcrypt.hash(tempPassword, 10);
+      const passwordHash = await bcrypt.hash(senhaValida, 10);
 
       // Salvar registro na tabela pública User (profiles)
       await prisma.user.create({
         data: {
           id: authUserId,
           name: dados.nome,
-          email: dados.email.toLowerCase().trim(),
+          email: emailNormalizado,
           cpf: dados.cpf,
           roleId: dbRole.id,
           password: passwordHash,
@@ -274,7 +283,7 @@ export async function salvarUsuario(dados: { id?: string; nome: string; email: s
         }
       });
 
-      return { sucesso: true, senhaTemporaria: tempPassword };
+      return { sucesso: true };
     }
 
     return { sucesso: true };
