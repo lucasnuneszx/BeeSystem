@@ -7,8 +7,7 @@
     <a href="#-sobre-o-projeto">Sobre</a> •
     <a href="#-tecnologias">Tecnologias</a> •
     <a href="#-módulos-do-sistema">Módulos</a> •
-    <a href="#-como-rodar">Como Rodar</a> •
-    <a href="#-autor">Autor</a>
+    <a href="#-como-rodar">Como Rodar</a>
   </p>
   
   <p>
@@ -84,17 +83,6 @@ npm run dev
 ```
 
 A aplicação estará disponível em `http://localhost:3000`.
-
-## 👨‍💻 Autor
-
-Desenvolvido por **[Lucas Nunes (lucasnuneszx)](https://github.com/lucasnuneszx)**
-
-<a href="https://github.com/lucasnuneszx">
-  <img src="https://img.shields.io/github/followers/lucasnuneszx?label=Follow&style=social" alt="GitHub followers" />
-</a>
-<br/>
-<br/>
-
 > *"Inovação logística, desenhada para uma performance enterprise."*
 
 ---
