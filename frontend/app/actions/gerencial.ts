@@ -6,8 +6,9 @@ import { obterSessaoAtual } from './usuarios';
 export async function aprovarPedido(orderId: string) {
   try {
     const session = await obterSessaoAtual();
-    if (!session || (session.role !== 'admin' && session.role !== 'Gerente')) {
-      return { sucesso: false, erro: 'Acesso negado: Somente gerentes podem aprovar pedidos.' };
+    const userRole = session?.role?.toUpperCase();
+    if (!session || (userRole !== 'ADMIN' && userRole !== 'MANAGER')) {
+      return { sucesso: false, erro: 'Acesso negado: Somente gerentes ou administradores podem aprovar pedidos.' };
     }
 
     const order = await prisma.order.findUnique({ where: { id: orderId } });
@@ -38,8 +39,9 @@ export async function aprovarPedido(orderId: string) {
 export async function rejeitarPedido(orderId: string, justification: string) {
   try {
     const session = await obterSessaoAtual();
-    if (!session || (session.role !== 'admin' && session.role !== 'Gerente')) {
-      return { sucesso: false, erro: 'Acesso negado: Somente gerentes podem rejeitar pedidos.' };
+    const userRole = session?.role?.toUpperCase();
+    if (!session || (userRole !== 'ADMIN' && userRole !== 'MANAGER')) {
+      return { sucesso: false, erro: 'Acesso negado: Somente gerentes ou administradores podem rejeitar pedidos.' };
     }
 
     const order = await prisma.order.findUnique({ where: { id: orderId } });

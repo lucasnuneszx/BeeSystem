@@ -96,30 +96,28 @@ export default function PaginaGestaoUsuarios() {
       return;
     }
 
+    const emailRegex = /^[^\s@]+@[^\s@]+\.com$/;
+    if (!emailRegex.test(dadosForm.email.toLowerCase().trim())) {
+      notificar('O e-mail deve ser um endereço válido terminando em .com.', 'erro');
+      return;
+    }
+
+    if (!usuarioEditando && (!dadosForm.senha || dadosForm.senha.trim() === '')) {
+      notificar('A senha é obrigatória para a criação de um novo operador.', 'erro');
+      return;
+    }
+
     notificar('Gravando na colmeia...', 'info');
 
     // Tenta salvar no banco real via Server Action
     try {
       const res = await salvarUsuario({ ...dadosForm, id: usuarioEditando?.id });
       if (res.sucesso) {
-        if (res.senhaTemporaria) {
-          setSenhaTemporariaGerada(res.senhaTemporaria);
-          notificar('Colaborador criado com sucesso! Copie a senha temporária abaixo.', 'sucesso');
-        } else {
-          notificar('Operação gravada no banco corporativo!', 'sucesso');
-          fecharModal();
-        }
+        notificar('Operação gravada no banco corporativo!', 'sucesso');
+        fecharModal();
         sincronizarComBanco();
       } else {
-        // Se falhar no banco, salva no estado local (mock reactivo) para não travar o usuário
-        if (usuarioEditando) {
-          setUsuarios(usuarios.map(u => u.id === usuarioEditando.id ? { ...u, ...dadosForm } : u));
-        } else {
-          const novo = { ...dadosForm, id: Math.random().toString(36).substr(2, 9), status: 'ATIVO' };
-          setUsuarios([novo, ...usuarios]);
-        }
-        notificar('Operação concluída localmente (Banco Offline).', 'info');
-        fecharModal();
+        notificar(`Erro ao salvar: ${res.erro}`, 'erro');
       }
     } catch (e) {
       notificar('Erro técnico. Operação descartada.', 'erro');
@@ -127,37 +125,75 @@ export default function PaginaGestaoUsuarios() {
     }
   };
 
-  const handleAlternarStatus = async (usuario: any) => {
-    try {
-      const res = await alternarStatusUsuario(usuario.id, usuario.status);
-      if (res.sucesso) {
-        const msg = usuario.status === 'ATIVO' ? 'Usuário desativado' : 'Usuário ativado';
-        notificar(msg, 'info');
-        sincronizarComBanco();
-      } else {
-        const novoStatus = usuario.status === 'ATIVO' ? 'INATIVO' : 'ATIVO';
-        setUsuarios(usuarios.map(u => u.id === usuario.id ? { ...u, status: novoStatus } : u));
-        const msg = novoStatus === 'INATIVO' ? 'Usuário desativado' : 'Usuário ativado';
-        notificar(msg, 'info');
-      }
-    } catch (e) {
-      notificar('Falha na conexão.', 'erro');
-    }
+  const [modalConfirmacao, setModalConfirmacao] = useState<{
+    aberto: boolean;
+    tipo: 'excluir' | 'status';
+    titulo: string;
+    mensagem: string;
+    dados: any;
+  }>({
+    aberto: false,
+    tipo: 'excluir',
+    titulo: '',
+    mensagem: '',
+    dados: null
+  });
+
+  const abrirConfirmacaoExcluir = (usuario: any) => {
+    setModalConfirmacao({
+      aberto: true,
+      tipo: 'excluir',
+      titulo: 'Excluir Colaborador',
+      mensagem: `Tem certeza de que deseja excluir permanentemente o operador "${usuario.nome}"? Esta ação não poderá ser desfeita.`,
+      dados: usuario
+    });
   };
 
-  const handleExcluir = async (id: string) => {
-    if (!confirm('Excluir este operador permanentemente?')) return;
-    try {
-      const res = await excluirUsuario(id);
-      if (res.sucesso) {
-        notificar('Removido do banco corporativo.', 'sucesso');
-        sincronizarComBanco();
-      } else {
-        setUsuarios(usuarios.filter(u => u.id !== id));
-        notificar('Removido localmente.', 'sucesso');
+  const abrirConfirmacaoStatus = (usuario: any) => {
+    const acao = usuario.status === 'ATIVO' ? 'inativar' : 'ativar';
+    setModalConfirmacao({
+      aberto: true,
+      tipo: 'status',
+      titulo: `${usuario.status === 'ATIVO' ? 'Inativar' : 'Ativar'} Colaborador`,
+      mensagem: `Deseja realmente ${acao} o operador "${usuario.nome}" no ecossistema?`,
+      dados: usuario
+    });
+  };
+
+  const confirmarAcao = async () => {
+    const { tipo, dados } = modalConfirmacao;
+    setModalConfirmacao(prev => ({ ...prev, aberto: false }));
+    if (!dados) return;
+
+    if (tipo === 'excluir') {
+      try {
+        const res = await excluirUsuario(dados.id);
+        if (res.sucesso) {
+          notificar('Removido do banco corporativo.', 'sucesso');
+          sincronizarComBanco();
+        } else {
+          setUsuarios(usuarios.filter(u => u.id !== dados.id));
+          notificar('Removido localmente.', 'sucesso');
+        }
+      } catch (e) {
+        notificar('Erro ao excluir.', 'erro');
       }
-    } catch (e) {
-      notificar('Erro ao excluir.', 'erro');
+    } else if (tipo === 'status') {
+      try {
+        const res = await alternarStatusUsuario(dados.id, dados.status);
+        if (res.sucesso) {
+          const msg = dados.status === 'ATIVO' ? 'Usuário desativado' : 'Usuário ativado';
+          notificar(msg, 'info');
+          sincronizarComBanco();
+        } else {
+          const novoStatus = dados.status === 'ATIVO' ? 'INATIVO' : 'ATIVO';
+          setUsuarios(usuarios.map(u => u.id === dados.id ? { ...u, status: novoStatus } : u));
+          const msg = novoStatus === 'INATIVO' ? 'Usuário desativado' : 'Usuário ativado';
+          notificar(msg, 'info');
+        }
+      } catch (e) {
+        notificar('Falha na conexão.', 'erro');
+      }
     }
   };
 
@@ -177,13 +213,6 @@ export default function PaginaGestaoUsuarios() {
           <p className="text-muted-foreground italic uppercase text-xs tracking-widest opacity-60 mt-1">Sincronizado com Ecossistema BeeSystem</p>
         </div>
         <div className="flex gap-4">
-          <button
-            onClick={sincronizarComBanco}
-            className="glass px-6 py-4 rounded-[2rem] border border-primary/20 text-primary font-black text-[10px] uppercase tracking-widest flex items-center gap-3 hover:bg-primary hover:text-background transition-all"
-          >
-            <Database size={18} className={carregando ? 'animate-spin' : ''} />
-            Atualizar Lista
-          </button>
           <button
             onClick={abrirModalParaCriar}
             className="bg-primary text-background px-8 py-4 rounded-2xl font-black flex items-center gap-2 hover:scale-105 transition-all shadow-lg shadow-primary/20"
@@ -282,10 +311,10 @@ export default function PaginaGestaoUsuarios() {
                           <button onClick={() => abrirModalParaEditar(item)} className="p-3 glass rounded-xl hover:text-primary transition-all shadow-xl" title="Editar Dados">
                             <Edit2 size={16} />
                           </button>
-                          <button onClick={() => handleAlternarStatus(item)} className="p-3 glass rounded-xl hover:text-orange-500 transition-all shadow-xl" title="Bloquear/Liberar">
+                          <button onClick={() => abrirConfirmacaoStatus(item)} className="p-3 glass rounded-xl hover:text-orange-500 transition-all shadow-xl" title="Bloquear/Liberar">
                             <ShieldAlert size={16} />
                           </button>
-                          <button onClick={() => handleExcluir(item.id)} className="p-3 glass rounded-xl hover:text-red-500 transition-all shadow-xl" title="Excluir Colaborador">
+                          <button onClick={() => abrirConfirmacaoExcluir(item)} className="p-3 glass rounded-xl hover:text-red-500 transition-all shadow-xl" title="Excluir Colaborador">
                             <Trash2 size={16} />
                           </button>
                         </div>
@@ -423,6 +452,22 @@ export default function PaginaGestaoUsuarios() {
                       </div>
                     </div>
 
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground px-4">
+                        Senha {usuarioEditando ? '(Deixe em branco para manter)' : '(Obrigatória)'}
+                      </label>
+                      <div className="relative">
+                        <KeyRound className="absolute left-6 top-1/2 -translate-y-1/2 text-muted-foreground opacity-30" size={20} />
+                        <input
+                          type="password"
+                          value={dadosForm.senha}
+                          onChange={(e) => setDadosForm({ ...dadosForm, senha: e.target.value })}
+                          className="w-full bg-surface border border-white/5 rounded-[2rem] pl-16 pr-8 py-5 outline-none focus:border-primary/50 transition-all font-bold text-lg shadow-inner"
+                          placeholder={usuarioEditando ? "••••••••" : "Senha de Acesso"}
+                        />
+                      </div>
+                    </div>
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground px-4">Documento CPF</label>
@@ -459,7 +504,7 @@ export default function PaginaGestaoUsuarios() {
                     </button>
                     <button
                       onClick={handleSalvar}
-                      disabled={!dadosForm.nome || !dadosForm.email || !dadosForm.cpf}
+                      disabled={!dadosForm.nome || !dadosForm.email || !dadosForm.cpf || (!usuarioEditando && !dadosForm.senha)}
                       className="flex-1 bg-primary text-background py-6 rounded-[2rem] font-black text-[10px] uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-30 shadow-2xl shadow-primary/30"
                     >
                       {usuarioEditando ? 'Salvar Mudanças' : 'Garantir Acesso'}
@@ -467,6 +512,68 @@ export default function PaginaGestaoUsuarios() {
                   </div>
                 </div>
               )}
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Modal de Confirmação Personalizado */}
+      <AnimatePresence>
+        {modalConfirmacao.aberto && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-background/90 backdrop-blur-md z-[110]"
+              onClick={() => setModalConfirmacao(prev => ({ ...prev, aberto: false }))}
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 40 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 40 }}
+              className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md glass p-8 rounded-[2.5rem] z-[111] border border-white/5 shadow-[0_30px_80px_rgba(0,0,0,0.6)]"
+            >
+              <div className="space-y-6">
+                <div className="flex items-center gap-4">
+                  <div className={`w-14 h-14 rounded-2xl flex items-center justify-center border shadow-xl ${
+                    modalConfirmacao.tipo === 'excluir' 
+                      ? 'bg-red-500/10 text-red-500 border-red-500/20' 
+                      : 'bg-orange-500/10 text-orange-500 border-orange-500/20'
+                  }`}>
+                    {modalConfirmacao.tipo === 'excluir' ? <Trash2 size={28} /> : <ShieldAlert size={28} />}
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-black italic tracking-tighter uppercase whitespace-nowrap leading-none">
+                      {modalConfirmacao.titulo}
+                    </h2>
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest opacity-60 mt-2">Confirmação de Segurança</p>
+                  </div>
+                </div>
+
+                <p className="text-sm font-medium leading-relaxed text-gray-300">
+                  {modalConfirmacao.mensagem}
+                </p>
+
+                <div className="flex gap-4 pt-2">
+                  <button
+                    onClick={() => setModalConfirmacao(prev => ({ ...prev, aberto: false }))}
+                    className="flex-1 glass py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-white/5 transition-all"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    onClick={confirmarAcao}
+                    className={`flex-1 py-4 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98] transition-all shadow-2xl ${
+                      modalConfirmacao.tipo === 'excluir'
+                        ? 'bg-red-500 text-white shadow-red-500/20'
+                        : 'bg-orange-500 text-white shadow-orange-500/20'
+                    }`}
+                  >
+                    Confirmar
+                  </button>
+                </div>
+              </div>
             </motion.div>
           </>
         )}
