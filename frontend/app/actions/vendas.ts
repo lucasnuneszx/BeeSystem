@@ -95,7 +95,7 @@ export async function editarPedido(orderId: string, dados: any) {
       throw new Error('Não é possível editar um pedido já aprovado.');
     }
 
-    // Lógica de edição iria aqui (simplificada para auditoria)
+    // TODO: aplicar as alterações do pedido; por enquanto só registra a auditoria
 
     await prisma.auditLog.create({
       data: {

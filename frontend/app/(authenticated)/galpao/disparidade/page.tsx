@@ -34,7 +34,7 @@ export default function PaginaDisparidadeCarga() {
         if (dados && dados.length > 0) {
           setDisparidades(dados);
         } else {
-          // Fallback rico se o banco estiver vazio
+          // Dados de exemplo se o banco estiver vazio se o banco estiver vazio
           setDisparidades([
             { id: 'D1', remessa: 'NF-9980', item: 'Capacete VoltGuard Pro', observacao: 'Faltando 12 unidades na caixa master.', status: 'EM_ANALISE', gravidade: 'ALTA', data: '2026-06-01' },
             { id: 'D2', remessa: 'NF-9712', item: 'Luva Isolante Classe 0', observacao: 'Lacre rompido no transporte.', status: 'RESOLVIDO', gravidade: 'MEDIA', data: '2026-05-31' },

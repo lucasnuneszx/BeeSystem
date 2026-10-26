@@ -32,7 +32,7 @@ export default function PaginaStatusPedidos() {
             itens: p.items?.reduce((acc: number, item: any) => acc + item.quantity, 0) || 0
           })));
         } else {
-          // Fallback rico
+          // Dados de exemplo se o banco estiver vazio
           setPedidos([
             { id: 'ORD-1234', data: '2026-06-01', cliente: 'Mel Distribuidora SA', status: 'PENDENTE', valor: 1540.0, itens: 12 },
             { id: 'ORD-1235', data: '2026-05-30', cliente: 'Loja Apícola Central', status: 'APROVADO', valor: 890.0, itens: 6 },

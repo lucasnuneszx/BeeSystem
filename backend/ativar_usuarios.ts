@@ -4,7 +4,6 @@ import prisma from './db';
 async function main() {
   console.log('Buscando e ativando todos os usuários no banco...');
   
-  // Atualiza todos para ACTIVE
   const updateResult = await prisma.user.updateMany({
     data: {
       status: 'ACTIVE'
@@ -13,7 +12,6 @@ async function main() {
   
   console.log(`Status de ${updateResult.count} usuários atualizado para 'ACTIVE'.`);
   
-  // Lista todos os usuários
   const users = await prisma.user.findMany({
     include: {
       role: true

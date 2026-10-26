@@ -9,7 +9,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { usarNotificacao } from '@/context/NotificacaoContext';
 import { listarPedidos, aprovarPedido, rejeitarPedido } from '@/app/actions/gerencial';
 
-// Dados Mokados para População Imediata (RF Fidelidade Visual)
+// Dados de exemplo exibidos quando o banco não retorna pedidos
 const pedidosMockados = [
   { id: '1', codigo: 'PED-1024', cliente: 'Supermercado Elite LTDA', status: 'PENDENTE', vendedor: { nome: 'Ana Maria' }, criadoEm: new Date(), itens: [{ preco: 15.0, quantidade: 100 }] },
   { id: '2', codigo: 'PED-1025', cliente: 'Padaria Central', status: 'APROVADO', vendedor: { nome: 'Lucas Oliveira' }, criadoEm: new Date(), itens: [{ preco: 12.0, quantidade: 50 }] },
@@ -43,7 +43,7 @@ export default function PaginaMonitoramentoGerencial() {
         setPedidos(pedidosMockados);
       }
     } catch (e) {
-      console.warn('Operando em modo de contingência visual.');
+      console.warn('Falha ao listar pedidos, exibindo dados de exemplo.', e);
       setPedidos(pedidosMockados);
     } finally {
       setCarregando(false);

@@ -16,7 +16,7 @@ import {
   excluirUsuario
 } from '@/app/actions/usuarios';
 
-// Dados Mokados para População Imediata (RF Urgência)
+// Dados de exemplo exibidos quando o banco não retorna usuários
 const usuariosMockados = [
   { id: '1', nome: 'Ana Maria Ferreira', email: 'ana.ferreira@beesystem.com', cpf: '123.456.789-00', perfil: 'GERENTE', status: 'ATIVO' },
   { id: '2', nome: 'Lucas Oliveira Santos', email: 'lucas.oliveira@beesystem.com', cpf: '987.654.321-11', perfil: 'VENDEDOR', status: 'ATIVO' },
@@ -59,7 +59,7 @@ export default function PaginaGestaoUsuarios() {
         setUsuarios(usuariosMockados);
       }
     } catch (e) {
-      console.warn('Usando base local de dados (vôo manual).');
+      console.warn('Falha ao listar usuários, exibindo dados de exemplo.', e);
       setUsuarios(usuariosMockados);
     } finally {
       setCarregando(false);

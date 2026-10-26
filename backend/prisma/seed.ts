@@ -21,7 +21,7 @@ async function main() {
   await prisma.user.deleteMany();
   await prisma.role.deleteMany();
 
-  console.log('Iniciando seed corporativo do BeeSystem VoltGuard com MASSA DE DADOS...');
+  console.log('Populando banco com dados de exemplo...');
 
   const roles = [
     { name: 'ADMIN', description: 'Administrador do Sistema' },
@@ -95,7 +95,7 @@ async function main() {
     createdLots.push(await prisma.lot.create({ data: lot }));
   }
 
-  // Gerar MASSA de pedidos para popular os gráficos
+  // Pedidos de exemplo para os gráficos do dashboard
   console.log('Gerando massa de pedidos falsos para os gráficos...');
   const statuses = ['APPROVED', 'PENDING', 'REJECTED'];
   const sellerId = createdUsers['vendedor@voltguard.com'].id;
@@ -116,7 +116,7 @@ async function main() {
     });
   }
 
-  console.log('Seed corporativo finalizado com sucesso!');
+  console.log('Seed finalizado.');
 }
 
 main()

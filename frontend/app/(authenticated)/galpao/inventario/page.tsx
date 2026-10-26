@@ -19,7 +19,7 @@ export default function InventarioPage() {
         if (dados && dados.length > 0) {
           setScans(dados.map((u: any) => ({ ...u, currentLocation: u.currentLocation || 'GALPÃO A - CORREDOR 3' })));
         } else {
-          // Fallback rico
+          // Dados de exemplo se o banco estiver vazio
           setScans([
             { qrCodeValue: 'QR-VG-CAP-001', product: { name: 'Capacete VoltGuard Pro' }, currentLocation: 'GALPÃO A - CORREDOR 1', status: 'AVAILABLE' },
             { qrCodeValue: 'QR-VG-LUV-002', product: { name: 'Luva Isolante Classe 0' }, currentLocation: 'GALPÃO B - CORREDOR 4', status: 'AVAILABLE' },

@@ -25,7 +25,7 @@ export async function autenticarUsuario(email: string, senha: string) {
     let authUserId: string | null = null;
     const authUserEmail = email.toLowerCase().trim();
 
-    // 1. Tentar logar via Supabase Auth real
+    // Tenta autenticar pelo Supabase Auth
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
         email: authUserEmail,
@@ -48,7 +48,7 @@ export async function autenticarUsuario(email: string, senha: string) {
       }
     }
 
-    // 2. Localizar perfil do usuário no banco público (User)
+    // Perfil do usuário na tabela User
     let usuario: any = null;
     if (authUserId) {
       usuario = await prisma.user.findUnique({
@@ -97,7 +97,7 @@ export async function autenticarUsuario(email: string, senha: string) {
       }
     }
 
-    // 3. Validar se o usuário está ativo
+    // Bloqueia usuários inativos
     if (usuario.status !== 'ACTIVE' && usuario.status !== 'ATIVO') {
       return { sucesso: false, erro: 'Acesso negado: Usuário inativo.' };
     }
@@ -197,7 +197,6 @@ export async function salvarUsuario(dados: { id?: string; nome: string; email: s
     }
 
     if (dados.id) {
-      // Atualizar perfil
       const updateData: any = {
         name: dados.nome,
         email: emailNormalizado,
@@ -263,7 +262,6 @@ export async function salvarUsuario(dados: { id?: string; nome: string; email: s
         }
       });
 
-      // Gravar AuditLog corporativo
       const administrador = await obterUsuarioSessao();
       let logUserId = administrador?.id;
 

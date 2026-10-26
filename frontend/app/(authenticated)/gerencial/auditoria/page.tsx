@@ -37,7 +37,7 @@ export default function PaginaAuditoriaGerencial() {
         if (dados && dados.length > 0) {
           setLogs(dados);
         } else {
-          // Fallback rico
+          // Dados de exemplo se o banco estiver vazio
           setLogs([
             { id: '1', usuario: 'Ana Gerente', acao: 'Aprovação de Pedido', modulo: 'Vendas', detalhe: 'Pedido PED-104 aprovado com sucesso', data: '2026-06-01 14:30' },
             { id: '2', usuario: 'Bruno Vendedor', acao: 'Criação de Pedido', modulo: 'Vendas', detalhe: 'Novo item Mel de Abelha 500g adicionado ao PED-106', data: '2026-06-01 14:15' },
