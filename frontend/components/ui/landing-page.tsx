@@ -7,7 +7,6 @@ import {
   Terminal, Fingerprint, HelpCircle 
 } from "lucide-react";
 
-// Reusable ScrollGlobe component following shadcn/ui patterns
 interface ScrollGlobeProps {
   sections: {
     id: string;
@@ -31,17 +30,16 @@ interface ScrollGlobeProps {
 
 const defaultGlobeConfig = {
   positions: [
-    { top: "50%", left: "75%", scale: 1.4 },  // Hero: Right side, balanced
-    { top: "25%", left: "50%", scale: 0.9 },  // Quem somos: Top side, subtle
-    { top: "15%", left: "90%", scale: 2 },    // Fluxo: Left side, medium
-    { top: "50%", left: "50%", scale: 1.8 },  // Colaboradores: Center, large backdrop
+    { top: "50%", left: "75%", scale: 1.4 },  // Hero
+    { top: "25%", left: "50%", scale: 0.9 },  // Quem somos
+    { top: "15%", left: "90%", scale: 2 },    // Fluxo
+    { top: "50%", left: "50%", scale: 1.8 },  // Colaboradores
     { top: "30%", left: "20%", scale: 1.2 },  // Recursos
     { top: "50%", left: "70%", scale: 1.5 },  // Cultura
     { top: "60%", left: "50%", scale: 2.2 },  // Final
   ]
 };
 
-// Parse percentage string to number
 const parsePercent = (str: string): number => parseFloat(str.replace('%', ''));
 
 function ScrollGlobe({ sections, globeConfig = defaultGlobeConfig, className }: ScrollGlobeProps) {
@@ -131,7 +129,6 @@ function ScrollGlobe({ sections, globeConfig = defaultGlobeConfig, className }: 
         className
       )}
     >
-      {/* Import de fontes premium para visual corporativo de elite */}
       <style>
         {`
           @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;700&display=swap');
@@ -143,7 +140,7 @@ function ScrollGlobe({ sections, globeConfig = defaultGlobeConfig, className }: 
             font-family: 'JetBrains Mono', monospace;
           }
           
-          /* Efeito de linhas de grade de alta precisão (HUD Industrial) */
+          /* Linhas de grade do fundo */
           .hud-grid {
             background-size: 40px 40px;
             background-image: 
@@ -166,11 +163,11 @@ function ScrollGlobe({ sections, globeConfig = defaultGlobeConfig, className }: 
       <div className="absolute inset-0 hud-grid pointer-events-none z-0" />
       <div className="absolute inset-0 bg-gradient-to-b from-[#030304] via-transparent to-[#030304] pointer-events-none z-0" />
       
-      {/* Luzes de neon de profundidade */}
+      {/* Luzes de fundo */}
       <div className="absolute top-[20vh] left-[10vw] w-[35vw] h-[35vw] bg-yellow-500/5 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute bottom-[20vh] right-[10vw] w-[35vw] h-[35vw] bg-blue-500/5 rounded-full blur-[120px] pointer-events-none" />
 
-      {/* Barra de progresso de scroll de elite */}
+      {/* Barra de progresso do scroll */}
       <div className="fixed top-0 left-0 w-full h-[3px] bg-white/[0.03] z-50">
         <div 
           className="h-full bg-gradient-to-r from-yellow-500 via-[#ffcc00] to-yellow-600 will-change-transform shadow-[0_0_12px_#ffcc00]"
@@ -182,7 +179,7 @@ function ScrollGlobe({ sections, globeConfig = defaultGlobeConfig, className }: 
         />
       </div>
 
-      {/* Navegação por Pontos (Estilo Cockpit) */}
+      {/* Navegação por pontos */}
       <div className="hidden sm:flex fixed right-4 sm:right-6 lg:right-10 top-1/2 -translate-y-1/2 z-40">
         <div className="space-y-4 lg:space-y-5">
           {sections.map((section, index) => (
@@ -217,7 +214,7 @@ function ScrollGlobe({ sections, globeConfig = defaultGlobeConfig, className }: 
         </div>
       </div>
 
-      {/* Renderização do Globe/Bee flutuante */}
+      {/* Abelha flutuante */}
       <div
         className="fixed z-10 pointer-events-none will-change-transform transition-all duration-[1200ms] ease-[cubic-bezier(0.25,1,0.25,1)]"
         style={{
@@ -225,7 +222,6 @@ function ScrollGlobe({ sections, globeConfig = defaultGlobeConfig, className }: 
         }}
       >
         <div className="scale-75 sm:scale-90 lg:scale-100 relative group">
-          {/* Efeitos extras de radar ao redor da abelha */}
           <div className="absolute inset-0 bg-gradient-to-tr from-yellow-500/10 to-transparent rounded-full filter blur-xl animate-pulse" />
           <Globe />
         </div>
@@ -247,7 +243,7 @@ function ScrollGlobe({ sections, globeConfig = defaultGlobeConfig, className }: 
           >
             <div className="w-full max-w-sm sm:max-w-xl md:max-w-3xl lg:max-w-4xl xl:max-w-5xl">
               
-              {/* Título & Subtítulo refinados */}
+              {/* Título e subtítulo */}
               <div className="space-y-4 mb-8">
                 {section.subtitle && (
                   <div className="font-tech text-xs tracking-[0.35em] text-[#ffcc00] font-bold uppercase block">
@@ -267,17 +263,15 @@ function ScrollGlobe({ sections, globeConfig = defaultGlobeConfig, className }: 
                 </h1>
               </div>
 
-              {/* Descrição limpa, espaçada e contrastante */}
               <div className={cn(
                 "text-[#9ca3af] leading-relaxed mb-10 text-base sm:text-lg lg:text-xl font-light tracking-wide max-w-2xl",
                 section.align === 'center' && "mx-auto"
               )}>
                 <p>{section.description}</p>
                 
-                {/* Badges operacionais do Hero removidos */}
               </div>
 
-              {/* Grid de Features Refinado (HUD, sem caixas quadradas de IA genéricas) */}
+              {/* Features */}
               {section.features && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
                   {section.features.map((feature, featureIndex) => (
@@ -285,7 +279,6 @@ function ScrollGlobe({ sections, globeConfig = defaultGlobeConfig, className }: 
                       key={feature.title}
                       className="group relative p-6 bg-[#090d14]/30 backdrop-blur-sm border border-white/[0.04] hover:border-[#ffcc00]/30 hover:bg-[#090d14]/60 transition-all duration-300 rounded-lg overflow-hidden"
                     >
-                      {/* Elementos de canto HUD */}
                       <div className="hud-corner-element top-0 left-0 border-t-2 border-l-2" />
                       <div className="hud-corner-element top-0 right-0 border-t-2 border-r-2" />
                       <div className="hud-corner-element bottom-0 left-0 border-b-2 border-l-2" />
@@ -305,7 +298,7 @@ function ScrollGlobe({ sections, globeConfig = defaultGlobeConfig, className }: 
                 </div>
               )}
 
-              {/* Botões Operacionais com Visual Premium Modificado */}
+              {/* Ações */}
               {section.actions && (
                 <div className={cn(
                   "flex flex-wrap gap-4 mt-6",
@@ -377,16 +370,16 @@ export default function BeeSystemHome() {
       description: "O BeeSystem atua ativamente em três pilares fundamentais da operação industrial.",
       align: "left" as const,
       features: [
-        { title: "📥 Recebimento", description: "Endereçamento e validação automática via Scanner no ato da descarga." },
-        { title: "📝 Pedidos de Saída", description: "Saídas de carga processadas de forma estrita via FIFO e alocação automática." },
-        { title: "🛡️ Logs de Auditoria", description: "Histórico blindado de todas as movimentações e ações de operadores." }
+        { title: "Recebimento", description: "Endereçamento e validação automática via Scanner no ato da descarga." },
+        { title: "Pedidos de Saída", description: "Saídas de carga processadas de forma estrita via FIFO e alocação automática." },
+        { title: "Logs de Auditoria", description: "Histórico blindado de todas as movimentações e ações de operadores." }
       ]
     },
     {
       id: "colaboradores",
       badge: "Acesso",
       title: "Perfis Restritos",
-      subtitle: "SEGREGREGREGAÇÃO DE DEVERES (RBAC)",
+      subtitle: "SEGREGAÇÃO DE DEVERES (RBAC)",
       description: "Acesso altamente restrito e blindado com base nos papéis operacionais autorizados.",
       align: "center" as const,
       features: [

@@ -9,7 +9,7 @@
   --radius-2xl: 2.5rem;
 }
 
-/* Identidade Visual BEESYSTEM PREMIUM - 100% Human-Made */
+/* Identidade visual */
 :root {
   --background: #0B0F14;
   --foreground: #ffffff;
@@ -25,7 +25,7 @@ body {
   overflow-x: hidden;
 }
 
-/* Background Imersivo 'Colmeia Pro' (Parallax sutil) */
+/* Fundo em colmeia */
 .bg-beesystem {
   position: fixed;
   inset: 0;
@@ -52,7 +52,7 @@ body {
   to { background-position: 1000px 1000px; }
 }
 
-/* Design System - Glassmorphism de Elite */
+/* Glassmorphism */
 .glass {
   background: rgba(17, 24, 32, 0.85);
   backdrop-filter: blur(20px);
@@ -67,7 +67,7 @@ body {
   border: 1px solid rgba(250, 204, 21, 0.2);
 }
 
-/* Microinterações (RF Requisitos) */
+/* Microinterações */
 .btn-bee {
   @apply transition-all duration-300 active:scale-[0.97] hover:scale-[1.02] relative overflow-hidden;
 }
@@ -84,7 +84,7 @@ body {
   margin: 1.5rem 0;
 }
 
-/* Scrollbar Corporativa */
+/* Scrollbar */
 .custom-scrollbar::-webkit-scrollbar {
   width: 4px;
 }
@@ -107,7 +107,7 @@ body {
   transition: opacity 300ms, transform 300ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-/* Skeleton Loading (RF Requisitos) */
+/* Skeleton loading */
 .skeleton {
   background: linear-gradient(90deg, #111820 25%, #1a222c 50%, #111820 75%);
   background-size: 200% 100%;
@@ -119,7 +119,7 @@ body {
   100% { background-position: -200% 0; }
 }
 
-/* Animações de Voo (RF Requisitos) */
+/* Animações de voo */
 @keyframes bee-hover {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-8px); }

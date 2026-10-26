@@ -83,7 +83,7 @@ export default function PaginaRelatorioWeb() {
   return (
     <div className="min-h-screen bg-[#111111] text-xs font-mono flex flex-col overflow-hidden">
       
-      {/* Sistema de Notificação Customizado */}
+      {/* Notificação */}
       <AnimatePresence>
         {notificacao && (
           <motion.div 
@@ -98,7 +98,7 @@ export default function PaginaRelatorioWeb() {
         )}
       </AnimatePresence>
 
-      {/* Header Estilo Google Sheets */}
+      {/* Cabeçalho estilo planilha */}
       <header className="h-14 border-b border-white/10 bg-[#1a1a1a] flex items-center px-6 justify-between shrink-0">
         <div className="flex items-center gap-4">
            <button onClick={() => router.back()} className="p-2 hover:bg-white/5 rounded-full transition-all text-primary active:scale-90">
@@ -129,7 +129,7 @@ export default function PaginaRelatorioWeb() {
         </div>
       </header>
 
-      {/* Toolbar - Funcionalidade Real (RF15) */}
+      {/* Toolbar (RF15) */}
       <div className="h-10 border-b border-white/5 bg-[#222222] flex items-center px-8 gap-6 shrink-0 overflow-x-auto custom-scrollbar">
          <div className="flex items-center gap-2 text-muted-foreground border-r border-white/10 pr-6 mr-2">
             <button onClick={() => setNotificacao('Não é possível excluir a planilha mestre.')} className="p-1.5 hover:bg-red-500 hover:text-white rounded transition-colors tooltip" title="Excluir"><Trash size={14}/></button>
@@ -153,7 +153,7 @@ export default function PaginaRelatorioWeb() {
          </div>
       </div>
 
-      {/* Grid Principal - Dados Vivos (RF16) */}
+      {/* Grid principal (RF16) */}
       <div className="flex-1 overflow-auto custom-scrollbar bg-[#111111]">
          <table className="w-full text-left border-collapse min-w-[1000px]">
             <thead className="sticky top-0 z-10 bg-[#1c1c1c] shadow-md">

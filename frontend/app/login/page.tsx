@@ -68,7 +68,7 @@ export default function PaginaLogin() {
         `}
       </style>
 
-      {/* Lado Esquerdo: Identidade VoltGuard BeeSystem */}
+      {/* Lado esquerdo: identidade visual */}
       <div className="w-full hidden md:flex flex-col items-center justify-center bg-gradient-to-br from-[#080c14] to-[#030304] border-r border-white/5 relative overflow-hidden">
         {/* Grade HUD */}
         <div className="absolute inset-0 hud-grid pointer-events-none opacity-20" />
@@ -94,10 +94,9 @@ export default function PaginaLogin() {
         </div>
       </div>
   
-      {/* Lado Direito: Formulário de Autenticação Real */}
+      {/* Lado direito: formulário */}
       <div className="w-full flex flex-col items-center justify-center p-8 bg-[#030304] relative">
         <div className="absolute inset-0 hud-grid pointer-events-none opacity-5 md:hidden" />
-        {/* Luz de fundo do formulário */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] bg-[#ffcc00]/[0.02] rounded-full blur-[120px] pointer-events-none" />
 
         <form onSubmit={handleLogin} className="md:w-96 w-80 flex flex-col items-center justify-center relative z-10">
@@ -115,7 +114,6 @@ export default function PaginaLogin() {
           </div>
 
           <div className="w-full space-y-4">
-            {/* Input de Email */}
             <div className="flex items-center w-full bg-white/[0.02] border border-white/10 hover:border-[#ffcc00]/30 focus-within:border-[#ffcc00]/60 h-12 rounded-full overflow-hidden pl-6 gap-3 transition-colors">
               <Mail size={16} className="text-gray-500" />
               <input 
@@ -128,7 +126,6 @@ export default function PaginaLogin() {
               />                 
             </div>
 
-            {/* Input de Senha */}
             <div className="flex items-center w-full bg-white/[0.02] border border-white/10 hover:border-[#ffcc00]/30 focus-within:border-[#ffcc00]/60 h-12 rounded-full overflow-hidden pl-6 gap-3 transition-colors">
               <KeyRound size={16} className="text-gray-500" />
               <input 
@@ -154,7 +151,6 @@ export default function PaginaLogin() {
             <a className="hover:text-[#ffcc00] hover:underline transition-colors cursor-pointer">Recuperar Senha</a>
           </div>
 
-          {/* Botão de Submissão com Loader */}
           <button 
             type="submit" 
             disabled={carregando}

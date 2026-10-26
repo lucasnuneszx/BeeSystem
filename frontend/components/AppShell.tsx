@@ -68,7 +68,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const caminhoAtual = usePathname();
   const router = useRouter();
 
-  // Relógio corporativo em tempo real
+  // Relógio do topo
   useEffect(() => {
     const atualizarTempo = () => {
       const agora = new Date();
@@ -90,7 +90,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   const perfil = usuario.perfil;
 
-  // Organização dos links em grupos temáticos (Padrão Enterprise)
+  // Links do menu agrupados por área
   const categoriasMenu = [
     {
       titulo: 'Geral',
@@ -142,7 +142,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex h-screen w-screen bg-[#050506] text-white overflow-hidden relative">
-      {/* Background Decorativo */}
       <div className="absolute inset-0 bg-beesystem opacity-[0.03] pointer-events-none" />
       <div className="honeycomb-overlay opacity-[0.05] pointer-events-none" />
 
@@ -152,7 +151,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         animate={{ width: recolhido ? 88 : 280 }}
         className="hidden md:flex flex-col border-r border-white/[0.05] bg-[#090e16]/80 backdrop-blur-xl z-20 transition-all duration-300 relative"
       >
-        {/* Logo Corporativo VoltGuard/BeeSystem */}
+        {/* Logo */}
         <div className="p-6 flex items-center gap-3 border-b border-white/[0.03] h-20">
           <div className="w-10 h-10 rounded-xl bg-[#ffcc00]/10 flex items-center justify-center border border-[#ffcc00]/20 flex-shrink-0">
             <img src="/cybernetic_bee.png" alt="BeeSystem Logo" className="w-7 h-7 object-contain rounded-md" />
@@ -169,7 +168,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           )}
         </div>
 
-        {/* Itens do Menu Navegação Agrupados */}
+        {/* Itens do menu */}
         <div className="flex-1 px-4 py-6 space-y-6 custom-scrollbar overflow-y-auto">
           {categoriasFiltradas.map((cat) => (
             <div key={cat.titulo} className="space-y-2">
@@ -235,9 +234,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </div>
           </div>
 
-          {/* Widgets Globais (Relógio, Alertas e Usuário) */}
+          {/* Relógio, alertas e usuário */}
           <div className="flex items-center gap-6">
-            {/* Relógio Enterprise */}
             <div className="hidden lg:flex flex-col text-right border-r border-white/[0.05] pr-6">
               <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Hora Turno</span>
               <span className="text-sm font-mono font-bold text-[#ffcc00] mt-0.5">{tempoAtual || '--:--:--'}</span>

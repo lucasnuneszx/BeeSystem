@@ -1,7 +1,7 @@
 {
   "name": "frontend",
   "version": "1.0.0",
-  "description": "Sistema Premium de Gestão Logística Corporativa - Frontend",
+  "description": "Frontend do BeeSystem",
   "private": true,
   "scripts": {
     "dev": "next dev",
